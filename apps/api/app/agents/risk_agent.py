@@ -1,24 +1,25 @@
 import logging
-from typing import Dict, Any, List
+from typing import Any, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.agents.base import BaseAgent
 from app.agents.gemini_client import gemini_client
 
 logger = logging.getLogger(__name__)
+
 
 class RiskAgent(BaseAgent):
     """
     Risk Agent: Evaluates severity, threat level, escalation probability,
     and uncertainty bounds. Automatically determines whether Emergency Mode is warranted.
     """
+
     def __init__(self):
         super().__init__(name="risk", phase="risk_assessment")
 
     async def process(
-        self,
-        incident_id: str,
-        input_payload: Dict[str, Any],
-        db: AsyncSession
+        self, incident_id: str, input_payload: Dict[str, Any], db: AsyncSession
     ) -> Dict[str, Any]:
         intake_data = input_payload.get("intake_data", {})
         intent_data = input_payload.get("intent_data", {})
@@ -30,12 +31,12 @@ You are the ImpactOS Risk & Threat Assessment Agent.
 Assess the compound risk profile and threat escalation for Incident {incident_id}.
 
 Context:
-- Verified Evidence items: {len(verification_data.get('evidence_items', []))} items verified
-- Category: {intake_data.get('hazard_category')} at {intake_data.get('detected_location')}
-- Citizen intent: {intent_data.get('primary_intent')} (Urgency: {intent_data.get('urgency')})
-- Trapped Stakeholder: {intent_data.get('stakeholder')}
+- Verified Evidence items: {len(verification_data.get("evidence_items", []))} items verified
+- Category: {intake_data.get("hazard_category")} at {intake_data.get("detected_location")}
+- Citizen intent: {intent_data.get("primary_intent")} (Urgency: {intent_data.get("urgency")})
+- Trapped Stakeholder: {intent_data.get("stakeholder")}
 - River gauge: 7.82m (+1.32m over danger mark), 35,400 cusecs dam discharge, rising at 14.5 cm/hr
-- IMD Alert: {weather_data.get('imd_alerts', {}).get('current_warning')}
+- IMD Alert: {weather_data.get("imd_alerts", {}).get("current_warning")}
 
 Task:
 1. Determine Threat Level: MUST be one of "critical", "high", "moderate", "low".
@@ -62,30 +63,24 @@ Respond ONLY with valid JSON:
   "rationale": "string"
 }}
 """
-        response = await gemini_client.generate_structured(
-            prompt=prompt,
-            temperature=0.1
-        )
+        response = await gemini_client.generate_structured(prompt=prompt, temperature=0.1)
 
         if response.get("status") == "degraded":
             return {
-                "threat_level": "critical",
-                "risk_score": 0.94,
-                "escalation_probability": 0.88,
-                "confidence_min": 0.82,
-                "confidence_max": 0.96,
-                "confidence_score": 0.90,
-                "is_emergency": True,
-                "emergency_rationale": "Critical risk declared: Water level 1.32m above danger mark with ongoing 35,400 cusec release and trapped elderly citizen unable to evacuate autonomously.",
-                "assumptions": [
-                    "Dam discharge rate remains above 30,000 cusecs over next 3 hours",
-                    "Continuous rainfall in Western Ghat catchment maintains river level rise",
-                    "Road access to Bund Garden low-lying sectors remains impassable by conventional 2WD vehicles"
-                ],
-                "rationale": "Imminent threat to life confirmed through physical inundation markers and direct voice distress testimony.",
-                "status": "degraded"
+                "threat_level": "unassessed",
+                "risk_score": 0.0,
+                "escalation_probability": 0.0,
+                "confidence_min": 0.0,
+                "confidence_max": 1.0,
+                "confidence_score": 0.0,
+                "is_emergency": False,
+                "emergency_rationale": "Risk assessment unavailable; do not interpret this state as safe.",
+                "assumptions": [],
+                "rationale": "Gemini is unavailable; risk has not been assessed.",
+                "status": "degraded",
             }
 
         return response
+
 
 risk_agent = RiskAgent()

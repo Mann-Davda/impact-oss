@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: impactos-api
+    runtime: docker
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:////tmp/impactos.db
+      - key: CORS_ORIGINS
+        sync: false
+      - key: RATE_LIMIT_REQUESTS
+        value: "120"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"

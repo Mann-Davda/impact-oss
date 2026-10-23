@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { Layers, ShieldCheck, Navigation, Ambulance, Home, Users, CheckCircle, Info } from "lucide-react";
 import { fetchResourceOptimization, ResourceOptimizationResult, ResourceAllocation } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface ResourceAllocationViewProps {
   incidentId: string;
 }
 
 export function ResourceAllocationView({ incidentId }: ResourceAllocationViewProps) {
+  const { t } = useLocale();
   const [data, setData] = useState<ResourceOptimizationResult | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +44,7 @@ export function ResourceAllocationView({ incidentId }: ResourceAllocationViewPro
   if (loading) {
     return (
       <div className="spatial-card p-6 text-center text-xs text-slate-400">
-        Computing Explainable Linear Resource Allocation...
+        {t("Computing Explainable Linear Resource Allocation...")}
       </div>
     );
   }
@@ -57,7 +59,7 @@ export function ResourceAllocationView({ incidentId }: ResourceAllocationViewPro
           <Layers className="w-5 h-5 text-success" />
           <div>
             <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-              Explainable Resource Optimization Engine
+              {t("Explainable Resource Optimization Engine")}
             </h2>
             <span className="text-[10px] text-slate-500 font-mono">
               Method: Priority-Constrained Greedy Matching • {data?.total_resources_evaluated || 6} Tactical Assets Evaluated
@@ -66,7 +68,7 @@ export function ResourceAllocationView({ incidentId }: ResourceAllocationViewPro
         </div>
 
         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/30">
-          DEMO DATA (mock)
+          {t("DEMO DATA (mock)")}
         </span>
       </div>
 
@@ -89,7 +91,7 @@ export function ResourceAllocationView({ incidentId }: ResourceAllocationViewPro
               </div>
 
               <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                <strong>Assigned Mission:</strong> {item.demand}
+                <strong>{t("Assigned Mission:")}</strong> {item.demand}
               </p>
 
               <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-mono">
@@ -103,7 +105,7 @@ export function ResourceAllocationView({ incidentId }: ResourceAllocationViewPro
 
             {/* Explainable Why */}
             <div className="p-2.5 rounded-lg bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark text-[11px] text-slate-600 dark:text-slate-400">
-              <strong className="text-slate-800 dark:text-slate-200">Why Selected:</strong>{" "}
+              <strong className="text-slate-800 dark:text-slate-200">{t("Why Selected:")}</strong>{" "}
               {item.explainable_why}
             </div>
           </div>

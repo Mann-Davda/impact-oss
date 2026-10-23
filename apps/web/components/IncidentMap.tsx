@@ -1,19 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapPin, Navigation, Home, Shield, AlertTriangle, Layers, ExternalLink } from "lucide-react";
+import { MapPin, Navigation, Home, Shield, AlertTriangle, ExternalLink } from "lucide-react";
 import { Incident } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface IncidentMapProps {
   incident: Incident;
 }
 
+interface MapPoi {
+  id: string;
+  name: string;
+  type: "incident" | "shelter" | "rescue_boat" | "hospital";
+  lat: number;
+  lon: number;
+  distance: string;
+  capacity?: number;
+  status: string;
+  source: string;
+}
+
 export function IncidentMap({ incident }: IncidentMapProps) {
-  const [activeLayer, setActiveLayer] = useState<"all" | "shelters" | "boats">("all");
-  const [selectedPoi, setSelectedPoi] = useState<any | null>(null);
+  const { t } = useLocale();
+  const [selectedPoi, setSelectedPoi] = useState<MapPoi | null>(null);
 
   // Demo POIs around Pune Bund Garden corridor (labelled source: mock)
-  const pois = [
+  const pois: MapPoi[] = [
     {
       id: "inc_pin",
       name: "Incident Epicenter: Mutha River Bank",
@@ -67,7 +80,7 @@ export function IncidentMap({ incident }: IncidentMapProps) {
           <MapPin className="w-5 h-5 text-critical" />
           <div>
             <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-              Crisis Spatial Grid: Pune Bund Garden Sector
+              {t("Crisis Spatial Grid: Pune Bund Garden Sector")}
             </h2>
             <span className="text-[10px] text-slate-400 font-mono">
               Coordinates: {incident.latitude}, {incident.longitude}
@@ -84,7 +97,7 @@ export function IncidentMap({ incident }: IncidentMapProps) {
             target="_blank"
             rel="noreferrer"
             className="p-1.5 rounded-lg border border-border-light dark:border-border-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            title="Open in Google Maps"
+            title={t("Open in Google Maps")}
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -97,7 +110,15 @@ export function IncidentMap({ incident }: IncidentMapProps) {
         <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#1E293B_1px,transparent_1px)] [background-size:16px_16px]"></div>
         
         {/* Swollen Mutha River Channel Graphic */}
-        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          role="img"
+          aria-label="DEMO DATA: schematic Mutha River corridor with flood, rescue boat, shelter and hospital markers"
+          className="absolute inset-0 w-full h-full"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1000 320"
+          preserveAspectRatio="none"
+          overflow="hidden"
+        >
           <path
             d="M -20 220 C 150 200, 250 140, 450 160 C 650 180, 800 120, 1000 130"
             stroke="#1E3A8A"
@@ -118,7 +139,9 @@ export function IncidentMap({ incident }: IncidentMapProps) {
 
         {/* POI Markers */}
         {/* 1. Epicenter */}
-        <div
+        <button
+          type="button"
+          aria-label={`Show details for ${pois[0].name}`}
           onClick={() => setSelectedPoi(pois[0])}
           className="absolute left-[45%] top-[48%] -translate-x-1/2 -translate-y-1/2 cursor-pointer group flex flex-col items-center z-20"
         >
@@ -129,10 +152,12 @@ export function IncidentMap({ incident }: IncidentMapProps) {
           <span className="mt-1 text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-black/80 text-white border border-critical">
             Flood Hazard
           </span>
-        </div>
+        </button>
 
         {/* 2. Boat Staging */}
-        <div
+        <button
+          type="button"
+          aria-label={`Show details for ${pois[2].name}`}
           onClick={() => setSelectedPoi(pois[2])}
           className="absolute left-[35%] top-[56%] -translate-x-1/2 -translate-y-1/2 cursor-pointer group flex flex-col items-center z-20"
         >
@@ -142,10 +167,12 @@ export function IncidentMap({ incident }: IncidentMapProps) {
           <span className="text-[9px] font-bold text-blue-200 bg-black/60 px-1 rounded mt-0.5">
             Boat 4 (400m)
           </span>
-        </div>
+        </button>
 
         {/* 3. Shelter */}
-        <div
+        <button
+          type="button"
+          aria-label={`Show details for ${pois[1].name}`}
           onClick={() => setSelectedPoi(pois[1])}
           className="absolute left-[65%] top-[28%] -translate-x-1/2 -translate-y-1/2 cursor-pointer group flex flex-col items-center z-20"
         >
@@ -155,10 +182,12 @@ export function IncidentMap({ incident }: IncidentMapProps) {
           <span className="text-[9px] font-bold text-emerald-200 bg-black/60 px-1 rounded mt-0.5">
             Shelter (1.2 km)
           </span>
-        </div>
+        </button>
 
         {/* 4. Ambulance */}
-        <div
+        <button
+          type="button"
+          aria-label={`Show details for ${pois[3].name}`}
           onClick={() => setSelectedPoi(pois[3])}
           className="absolute left-[22%] top-[32%] -translate-x-1/2 -translate-y-1/2 cursor-pointer group flex flex-col items-center z-20"
         >
@@ -168,11 +197,11 @@ export function IncidentMap({ incident }: IncidentMapProps) {
           <span className="text-[9px] font-bold text-purple-200 bg-black/60 px-1 rounded mt-0.5">
             ALS Unit (1.8 km)
           </span>
-        </div>
+        </button>
 
         {/* Map Legend Overlay */}
         <div className="absolute bottom-3 left-3 bg-black/75 backdrop-blur-md rounded-lg p-2.5 text-[10px] text-white border border-white/10 z-30">
-          <div className="font-extrabold uppercase text-[9px] text-slate-400 mb-1">Live Asset Legend</div>
+          <div className="font-extrabold uppercase text-[9px] text-slate-400 mb-1">{t("Live Asset Legend")}</div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-critical"></span> Flood Hazard

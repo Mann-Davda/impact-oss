@@ -1,10 +1,13 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.agents.base import BaseAgent
 from app.agents.gemini_client import gemini_client
 
 logger = logging.getLogger(__name__)
+
 
 class IntentAgent(BaseAgent):
     """
@@ -12,14 +15,12 @@ class IntentAgent(BaseAgent):
     to determine emergency intent, urgency, affected stakeholders, required response action,
     and priority resources.
     """
+
     def __init__(self):
         super().__init__(name="intent", phase="intent_extraction")
 
     async def process(
-        self,
-        incident_id: str,
-        input_payload: Dict[str, Any],
-        db: AsyncSession
+        self, incident_id: str, input_payload: Dict[str, Any], db: AsyncSession
     ) -> Dict[str, Any]:
         intake_data = input_payload.get("intake_data", {})
         situation_summary = intake_data.get("situational_summary", "")
@@ -56,28 +57,16 @@ Respond ONLY with valid JSON with the structure:
   "rationale": "string"
 }}
 """
-        response = await gemini_client.generate_structured(
-            prompt=prompt,
-            temperature=0.1
-        )
+        response = await gemini_client.generate_structured(prompt=prompt, temperature=0.1)
 
         if response.get("status") == "degraded":
             return {
-                "primary_intent": "Emergency Life Safety & Rescue",
-                "urgency": "critical",
-                "stakeholder": "Elderly trapped citizen with mobility constraints",
-                "required_action": "Immediate amphibious boat evacuation and medical transport",
-                "resources_needed": [
-                    "NDRF/SDRF Inflatable Motorized Rescue Boat",
-                    "Paramedic Unit equipped with Geriatric Support",
-                    "Temporary Evacuation Shelter Registration"
-                ],
-                "priority": "critical",
-                "confidence_score": 0.85,
-                "rationale": "Voice distress confirms trapped elderly resident unable to exit flooded structure.",
-                "status": "degraded"
+                "confidence_score": 0.0,
+                "rationale": "Gemini is unavailable; operational intent has not been assessed.",
+                "status": "degraded",
             }
 
         return response
+
 
 intent_agent = IntentAgent()

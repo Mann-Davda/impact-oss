@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { BarChart3, Users, CheckCircle, Clock, ShieldCheck, Zap, Info } from "lucide-react";
-import { fetchImpactMetrics } from "../lib/api";
+import { fetchImpactMetrics, type ImpactMetrics } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface ImpactDashboardProps {
   incidentId: string;
 }
 
 export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
-  const [data, setData] = useState<any | null>(null);
+  const { t } = useLocale();
+  const [data, setData] = useState<ImpactMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +30,7 @@ export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
 
   if (loading || !data) return null;
 
-  const kpis = data.headline_kpis || {};
-  const breakdown = data.operational_breakdown || {};
+  const { headline_kpis: kpis, operational_breakdown: breakdown } = data;
 
   return (
     <div className="spatial-card p-6 flex flex-col gap-5">
@@ -39,10 +40,10 @@ export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
           <BarChart3 className="w-5 h-5 text-success" />
           <div>
             <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-              Operational Impact & Crisis KPIs
+              {t("Operational Impact & Crisis KPIs")}
             </h2>
             <span className="text-[10px] text-slate-500 font-mono">
-              Post-Action Audit & Efficacy Metrics
+              {t("Post-Action Audit & Efficacy Metrics")}
             </span>
           </div>
         </div>
@@ -57,7 +58,7 @@ export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
         {/* KPI 1: People Helped */}
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider">People Protected</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{t("People Protected")}</span>
             <Users className="w-4 h-4 text-primary dark:text-white" />
           </div>
           <div className="text-2xl font-black text-primary dark:text-white">
@@ -71,7 +72,7 @@ export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
         {/* KPI 2: Reports Verified */}
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Reports Verified</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{t("Reports Verified")}</span>
             <CheckCircle className="w-4 h-4 text-success" />
           </div>
           <div className="text-2xl font-black text-success">
@@ -85,7 +86,7 @@ export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
         {/* KPI 3: Actions Executed */}
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Actions Executed</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{t("Actions Executed")}</span>
             <Zap className="w-4 h-4 text-alert" />
           </div>
           <div className="text-2xl font-black text-slate-800 dark:text-slate-100">
@@ -99,7 +100,7 @@ export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
         {/* KPI 4: Mean Response Time */}
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Response Time</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{t("Response Time")}</span>
             <Clock className="w-4 h-4 text-blue-500" />
           </div>
           <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
@@ -115,21 +116,21 @@ export function ImpactDashboard({ incidentId }: ImpactDashboardProps) {
       <div className="p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-border-light dark:border-border-dark text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-6">
           <div>
-            <span className="text-[10px] text-slate-400 block font-bold">Amphibious Extractions</span>
+            <span className="text-[10px] text-slate-400 block font-bold">{t("Amphibious Extractions")}</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">
               {breakdown.boat_extractions_completed} Priority Mission (Elderly Aaji)
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] text-slate-400 block font-bold">Shelter Intakes</span>
+            <span className="text-[10px] text-slate-400 block font-bold">{t("Shelter Intakes")}</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">
               {breakdown.shelter_intake_registered} Residents (St. Helena)
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] text-slate-400 block font-bold">ALS Ambulance Units</span>
+            <span className="text-[10px] text-slate-400 block font-bold">{t("ALS Ambulance Units")}</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">
               {breakdown.als_ambulance_rendezvous} Staged Unit (ALS-02)
             </span>

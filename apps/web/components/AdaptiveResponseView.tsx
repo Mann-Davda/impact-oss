@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { User, Users, Landmark, Newspaper, Navigation, CheckCircle, ShieldAlert, Copy, Check } from "lucide-react";
 import { fetchAdaptiveResponse, AdaptiveResponseData } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface AdaptiveResponseViewProps {
   incidentId: string;
 }
 
 export function AdaptiveResponseView({ incidentId }: AdaptiveResponseViewProps) {
+  const { t } = useLocale();
   const [data, setData] = useState<AdaptiveResponseData | null>(null);
   const [activeTab, setActiveTab] = useState<"citizen" | "volunteer" | "government" | "media">("citizen");
   const [copied, setCopied] = useState(false);
@@ -41,7 +43,7 @@ export function AdaptiveResponseView({ incidentId }: AdaptiveResponseViewProps) 
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary dark:text-white" />
             <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-              Adaptive Multi-Persona Crisis Response
+              {t("Adaptive Multi-Persona Crisis Response")}
             </h2>
           </div>
           <span className="text-[10px] text-slate-500">
@@ -50,49 +52,49 @@ export function AdaptiveResponseView({ incidentId }: AdaptiveResponseViewProps) 
         </div>
 
         {/* Persona Tabs */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-border-light dark:border-border-dark">
+        <div className="grid grid-cols-2 sm:flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-border-light dark:border-border-dark">
           <button
             onClick={() => setActiveTab("citizen")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`min-w-0 justify-center px-2 sm:px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "citizen"
                 ? "bg-white dark:bg-[#111B2E] text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <User className="w-3.5 h-3.5" /> Citizen
+            <User className="w-3.5 h-3.5" /> {t("Citizen")}
           </button>
 
           <button
             onClick={() => setActiveTab("volunteer")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`min-w-0 justify-center px-2 sm:px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "volunteer"
                 ? "bg-white dark:bg-[#111B2E] text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <Users className="w-3.5 h-3.5" /> Volunteer
+            <Users className="w-3.5 h-3.5" /> {t("Volunteer")}
           </button>
 
           <button
             onClick={() => setActiveTab("government")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`min-w-0 justify-center px-2 sm:px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "government"
                 ? "bg-white dark:bg-[#111B2E] text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <Landmark className="w-3.5 h-3.5" /> Government
+            <Landmark className="w-3.5 h-3.5" /> {t("Government")}
           </button>
 
           <button
             onClick={() => setActiveTab("media")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`min-w-0 justify-center px-2 sm:px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "media"
                 ? "bg-white dark:bg-[#111B2E] text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <Newspaper className="w-3.5 h-3.5" /> Media
+            <Newspaper className="w-3.5 h-3.5" /> {t("Media")}
           </button>
         </div>
       </div>
@@ -102,20 +104,20 @@ export function AdaptiveResponseView({ incidentId }: AdaptiveResponseViewProps) 
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 text-xs">
             <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase block mb-1">
-              Designated Safe Evacuation Route
+              {t("Designated Safe Evacuation Route")}
             </span>
             <p className="font-bold text-slate-800 dark:text-slate-200">
               {data.citizen.safe_route}
             </p>
             <p className="text-slate-600 dark:text-slate-400 mt-1">
-              <strong>Nearest Shelter:</strong> {data.citizen.designated_shelter}
+              <strong>{t("Nearest Shelter:")}</strong> {data.citizen.designated_shelter}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-border-light dark:border-border-dark text-xs">
               <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">
-                English Instructions
+                {t("English Instructions")}
               </span>
               <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
                 {data.citizen.bilingual_instructions.en}
@@ -124,7 +126,7 @@ export function AdaptiveResponseView({ incidentId }: AdaptiveResponseViewProps) 
 
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-border-light dark:border-border-dark text-xs">
               <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">
-                मराठी सूचना (Marathi Instructions)
+                {t("मराठी सूचना (Marathi Instructions)")}
               </span>
               <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
                 {data.citizen.bilingual_instructions.mr}
@@ -216,7 +218,7 @@ export function AdaptiveResponseView({ incidentId }: AdaptiveResponseViewProps) 
               </button>
             </div>
             <p className="font-serif text-slate-800 dark:text-slate-200 text-sm leading-relaxed">
-              "{data.media.official_statement}"
+              &quot;{data.media.official_statement}&quot;
             </p>
           </div>
 
@@ -227,7 +229,7 @@ export function AdaptiveResponseView({ incidentId }: AdaptiveResponseViewProps) 
             <div className="space-y-1.5">
               {data.media.fact_check_box.map((fc, idx) => (
                 <div key={idx} className="flex items-center justify-between text-xs p-2 rounded bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark">
-                  <span className="text-slate-600 dark:text-slate-400">Rumor: "{fc.rumor}"</span>
+                  <span className="text-slate-600 dark:text-slate-400">Rumor: &quot;{fc.rumor}&quot;</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">{fc.verdict}</span>
                 </div>
               ))}

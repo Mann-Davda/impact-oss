@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { Navigation, Home, AlertTriangle, Send, CheckCircle2, Wifi, WifiOff } from "lucide-react";
+import { useLocale } from "../lib/locale";
 
 interface MobilePWAViewProps {
   onClose?: () => void;
 }
 
 export function MobilePWAView({ onClose }: MobilePWAViewProps) {
+  const { t } = useLocale();
   const [offlineReport, setOfflineReport] = useState("");
   const [isOnline, setIsOnline] = useState(true);
   const [queuedCount, setQueuedCount] = useState(0);
@@ -58,21 +60,21 @@ export function MobilePWAView({ onClose }: MobilePWAViewProps) {
       <div className="flex items-center justify-between border-b border-border-light dark:border-border-dark pb-3">
         <div>
           <span className="text-[10px] font-extrabold uppercase text-critical tracking-wider block">
-            Emergency Citizen Mobile Mode
+            {t("Emergency Citizen Mobile Mode")}
           </span>
           <h2 className="text-base font-black text-primary dark:text-white">
-            ImpactOS Field Pocket PWA
+            {t("ImpactOS Field Pocket PWA")}
           </h2>
         </div>
 
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800">
           {isOnline ? (
             <>
-              <Wifi className="w-3 h-3 text-success" /> Online Live Sync
+              <Wifi className="w-3 h-3 text-success" /> {t("Online Live Sync")}
             </>
           ) : (
             <>
-              <WifiOff className="w-3 h-3 text-alert" /> Offline Storage Active
+              <WifiOff className="w-3 h-3 text-alert" /> {t("Offline Storage Active")}
             </>
           )}
         </div>
@@ -90,7 +92,7 @@ export function MobilePWAView({ onClose }: MobilePWAViewProps) {
           <div className="flex items-center gap-3">
             <Home className="w-6 h-6 text-yellow-300" />
             <div className="text-left">
-              <span className="text-xs font-black uppercase block">Find Nearest Shelter (1.2 km)</span>
+              <span className="text-xs font-black uppercase block">{t("Find Nearest Shelter (1.2 km)")}</span>
               <span className="text-[11px] text-slate-300">St. Helena Complex • Elevated Ground</span>
             </div>
           </div>
@@ -101,7 +103,7 @@ export function MobilePWAView({ onClose }: MobilePWAViewProps) {
         <div className="min-h-[56px] p-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-center gap-3">
           <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0" />
           <div className="text-xs leading-snug">
-            <strong className="block uppercase font-black text-[10px]">Avoid Ambedkar Bridge</strong>
+            <strong className="block uppercase font-black text-[10px]">{t("Avoid Ambedkar Bridge")}</strong>
             Approach road submerged by 0.5m. Evacuate South towards Camp corridor.
           </div>
         </div>
@@ -109,7 +111,7 @@ export function MobilePWAView({ onClose }: MobilePWAViewProps) {
         {/* Action 3: Offline Report Capture */}
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark space-y-2">
           <span className="text-[10px] font-bold uppercase text-slate-500 block">
-            Report Stranded Person (Offline-Safe)
+            {t("Report Stranded Person (Offline-Safe)")}
           </span>
           <textarea
             rows={2}
@@ -122,7 +124,7 @@ export function MobilePWAView({ onClose }: MobilePWAViewProps) {
             onClick={handleSaveReport}
             className="min-h-[48px] w-full rounded-lg bg-success text-white font-bold text-xs uppercase flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
           >
-            <Send className="w-4 h-4" /> Save / Submit Report {queuedCount > 0 && `(${queuedCount} Queued)`}
+            <Send className="w-4 h-4" /> {t("Save / Submit Report")} {queuedCount > 0 && `(${queuedCount} ${t("Queued")})`}
           </button>
         </div>
       </div>

@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { Dna, History, ArrowRight, CheckCircle, Info, Sparkles, AlertTriangle } from "lucide-react";
-import { fetchCrisisDNA } from "../lib/api";
+import { fetchCrisisDNA, type CrisisDNAResult } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface CrisisDNAViewProps {
   incidentId: string;
 }
 
 export function CrisisDNAView({ incidentId }: CrisisDNAViewProps) {
-  const [data, setData] = useState<any | null>(null);
+  const { t } = useLocale();
+  const [data, setData] = useState<CrisisDNAResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,8 +31,8 @@ export function CrisisDNAView({ incidentId }: CrisisDNAViewProps) {
   if (loading || !data) return null;
 
   const topMatch = data.top_historical_match;
-  const dimensions = data.dna_dimensions || [];
-  const similarList = data.similar_incidents || [];
+  const dimensions = data.dna_dimensions;
+  const similarList = data.similar_incidents;
 
   return (
     <div className="spatial-card p-6 flex flex-col gap-5">
@@ -40,7 +42,7 @@ export function CrisisDNAView({ incidentId }: CrisisDNAViewProps) {
           <Dna className="w-5 h-5 text-indigo-500" />
           <div>
             <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-              Crisis DNA & Historical Precedent Matcher
+              {t("Crisis DNA & Historical Precedent Matcher")}
             </h2>
             <span className="text-[10px] text-slate-500 font-mono">
               Fingerprint: {data.fingerprint_id} • 8-Dimensional Cosine Similarity Matching
@@ -59,7 +61,7 @@ export function CrisisDNAView({ incidentId }: CrisisDNAViewProps) {
           Crisis DNA Vector Representation
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {dimensions.map((dim: any, idx: number) => (
+          {dimensions.map((dim, idx) => (
             <div
               key={idx}
               className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark text-xs flex flex-col justify-between"
@@ -93,11 +95,11 @@ export function CrisisDNAView({ incidentId }: CrisisDNAViewProps) {
           </div>
 
           <p className="text-slate-700 dark:text-slate-300">
-            <strong>Historical Precedent:</strong> {topMatch.outcome_summary}
+            <strong>{t("Historical Precedent:")}</strong> {topMatch.outcome_summary}
           </p>
 
           <div className="mt-2.5 pt-2 border-t border-indigo-200/50 dark:border-indigo-900/50 text-[11px] text-indigo-900 dark:text-indigo-200">
-            <strong>Institutional Tactical Lesson:</strong> {topMatch.tactical_lesson}
+            <strong>{t("Institutional Tactical Lesson:")}</strong> {topMatch.tactical_lesson}
           </div>
         </div>
       )}
@@ -108,7 +110,7 @@ export function CrisisDNAView({ incidentId }: CrisisDNAViewProps) {
           Comparative Historical Benchmark Library
         </span>
         <div className="space-y-1.5">
-          {similarList.slice(1).map((item: any) => (
+          {similarList.slice(1).map((item) => (
             <div
               key={item.benchmark_id}
               className="p-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/30 border border-border-light dark:border-border-dark flex items-center justify-between text-xs"

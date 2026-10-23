@@ -1,5 +1,6 @@
 import math
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     dot_product = sum(a * b for a, b in zip(v1, v2))
@@ -8,6 +9,7 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     if magnitude1 == 0 or magnitude2 == 0:
         return 0.0
     return round(dot_product / (magnitude1 * magnitude2), 4)
+
 
 class CrisisDNAService:
     """
@@ -26,7 +28,7 @@ class CrisisDNAService:
             "vector": [1.0, 0.95, 0.85, 0.90, 1.0, 0.88, 0.92, 0.80],
             "peak_discharge_cusecs": 45400,
             "outcome_summary": "Extensive low-lying residential flooding. 400+ evacuated via NDRF boats. Precedent: Early evacuation of elderly prevented loss of life.",
-            "lessons_learned": "Prioritize shallow-draft boats for Bund Garden river wall sector before peak dam discharge arrives."
+            "lessons_learned": "Prioritize shallow-draft boats for Bund Garden river wall sector before peak dam discharge arrives.",
         },
         {
             "id": "hist_mutha_2005",
@@ -36,7 +38,7 @@ class CrisisDNAService:
             "vector": [1.0, 0.88, 0.70, 0.75, 0.8, 0.82, 0.85, 0.78],
             "peak_discharge_cusecs": 38000,
             "outcome_summary": "Prolonged waterlogging. Babasaheb Ambedkar Bridge closed for 18 hours.",
-            "lessons_learned": "Pre-stage ALS ambulances on South bank to avoid isolation if Ambedkar bridge is cordoned."
+            "lessons_learned": "Pre-stage ALS ambulances on South bank to avoid isolation if Ambedkar bridge is cordoned.",
         },
         {
             "id": "hist_mahad_2021",
@@ -46,7 +48,7 @@ class CrisisDNAService:
             "vector": [0.8, 0.98, 0.95, 0.60, 0.9, 0.95, 0.78, 0.40],
             "peak_discharge_cusecs": 60000,
             "outcome_summary": "Rapid flash inundation compounded by hillslope mudflows.",
-            "lessons_learned": "Communication blackouts occur early; broadcast bilingual radio/SMS alerts immediately."
+            "lessons_learned": "Communication blackouts occur early; broadcast bilingual radio/SMS alerts immediately.",
         },
         {
             "id": "hist_hyd_2020",
@@ -56,8 +58,8 @@ class CrisisDNAService:
             "vector": [0.6, 0.75, 0.90, 0.30, 0.5, 0.65, 0.70, 0.90],
             "peak_discharge_cusecs": 22000,
             "outcome_summary": "Intense urban storm runoff overwhelmed municipal stormwater drains.",
-            "lessons_learned": "Urban storm gridlock differs from riverine reservoir discharge."
-        }
+            "lessons_learned": "Urban storm gridlock differs from riverine reservoir discharge.",
+        },
     ]
 
     @classmethod
@@ -70,7 +72,7 @@ class CrisisDNAService:
         trapped_vulnerable_flag: bool = True,
         escalation_prob: float = 0.88,
         consensus_score: float = 0.86,
-        urban_density: float = 0.85
+        urban_density: float = 0.85,
     ) -> Dict[str, Any]:
         # Normalize vector dimensions (0.0 to 1.0)
         norm_type = 1.0 if "flood" in hazard_type.lower() else 0.5
@@ -90,24 +92,26 @@ class CrisisDNAService:
             norm_vulnerable,
             norm_escalation,
             norm_consensus,
-            norm_density
+            norm_density,
         ]
 
         # Calculate cosine similarity against benchmarks
         matches = []
         for benchmark in cls.HISTORICAL_BENCHMARKS:
             sim = cosine_similarity(incident_vector, benchmark["vector"])
-            matches.append({
-                "benchmark_id": benchmark["id"],
-                "name": benchmark["name"],
-                "location": benchmark["location"],
-                "year": benchmark["year"],
-                "similarity_score": sim,
-                "similarity_percentage": f"{int(sim * 100)}%",
-                "peak_discharge_cusecs": benchmark["peak_discharge_cusecs"],
-                "outcome_summary": benchmark["outcome_summary"],
-                "tactical_lesson": benchmark["lessons_learned"]
-            })
+            matches.append(
+                {
+                    "benchmark_id": benchmark["id"],
+                    "name": benchmark["name"],
+                    "location": benchmark["location"],
+                    "year": benchmark["year"],
+                    "similarity_score": sim,
+                    "similarity_percentage": f"{int(sim * 100)}%",
+                    "peak_discharge_cusecs": benchmark["peak_discharge_cusecs"],
+                    "outcome_summary": benchmark["outcome_summary"],
+                    "tactical_lesson": benchmark["lessons_learned"],
+                }
+            )
 
         matches.sort(key=lambda m: m["similarity_score"], reverse=True)
 
@@ -115,17 +119,50 @@ class CrisisDNAService:
             "fingerprint_id": f"dna_{int(severity_score * 1000)}_{int(discharge_cusecs)}",
             "crisis_dna_vector": [round(v, 3) for v in incident_vector],
             "dna_dimensions": [
-                {"dimension": "Hazard Modality", "value": "Riverine Flood Inundation", "index": norm_type},
-                {"dimension": "Severity Magnitude", "value": f"{int(norm_severity * 100)}%", "index": norm_severity},
-                {"dimension": "Water Rise Rate", "value": f"{water_rise_cm_hr} cm/hr", "index": norm_rise},
-                {"dimension": "Dam Discharge Pressure", "value": f"{int(discharge_cusecs):,} cusecs", "index": norm_discharge},
-                {"dimension": "Vulnerable Entrapment", "value": "Elderly Resident Trapped", "index": norm_vulnerable},
-                {"dimension": "Escalation Threat", "value": f"{int(norm_escalation * 100)}%", "index": norm_escalation},
-                {"dimension": "Multi-Agent Consensus", "value": f"{int(norm_consensus * 100)}%", "index": norm_consensus},
-                {"dimension": "Urban Corridor Density", "value": "High Urban Density", "index": norm_density}
+                {
+                    "dimension": "Hazard Modality",
+                    "value": "Riverine Flood Inundation",
+                    "index": norm_type,
+                },
+                {
+                    "dimension": "Severity Magnitude",
+                    "value": f"{int(norm_severity * 100)}%",
+                    "index": norm_severity,
+                },
+                {
+                    "dimension": "Water Rise Rate",
+                    "value": f"{water_rise_cm_hr} cm/hr",
+                    "index": norm_rise,
+                },
+                {
+                    "dimension": "Dam Discharge Pressure",
+                    "value": f"{int(discharge_cusecs):,} cusecs",
+                    "index": norm_discharge,
+                },
+                {
+                    "dimension": "Vulnerable Entrapment",
+                    "value": "Elderly Resident Trapped",
+                    "index": norm_vulnerable,
+                },
+                {
+                    "dimension": "Escalation Threat",
+                    "value": f"{int(norm_escalation * 100)}%",
+                    "index": norm_escalation,
+                },
+                {
+                    "dimension": "Multi-Agent Consensus",
+                    "value": f"{int(norm_consensus * 100)}%",
+                    "index": norm_consensus,
+                },
+                {
+                    "dimension": "Urban Corridor Density",
+                    "value": "High Urban Density",
+                    "index": norm_density,
+                },
             ],
             "top_historical_match": matches[0] if matches else None,
-            "similar_incidents": matches
+            "similar_incidents": matches,
         }
+
 
 crisis_dna_service = CrisisDNAService()

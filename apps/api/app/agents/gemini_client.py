@@ -1,12 +1,15 @@
-import os
-import json
 import base64
+import json
 import logging
-from typing import Dict, Any, List, Optional
+import os
+from typing import Any, Dict, List, Optional
+
 import httpx
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
 
 class GeminiClient:
     """
@@ -15,8 +18,9 @@ class GeminiClient:
     multi-model fallback resilience (gemini-3.8-flash -> gemini-3.5-flash),
     and graceful degraded failure modes.
     """
+
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
-        self.api_key = api_key or settings.GEMINI_API_KEY
+        self.api_key = api_key if api_key is not None else settings.GEMINI_API_KEY
         self.primary_model = model or settings.GEMINI_MODEL
         self.fallback_models = ["gemini-3.5-flash", "gemini-flash-latest"]
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
@@ -26,7 +30,7 @@ class GeminiClient:
         prompt: str,
         media_files: Optional[List[Dict[str, Any]]] = None,
         system_instruction: Optional[str] = None,
-        temperature: float = 0.2
+        temperature: float = 0.2,
     ) -> Dict[str, Any]:
         """
         Calls Gemini with structured JSON output enforcement and automatic failover.
@@ -38,7 +42,7 @@ class GeminiClient:
                 "status": "degraded",
                 "error": "GEMINI_API_KEY not configured",
                 "confidence": 0.0,
-                "rationale": "Degraded mode: No API key provided"
+                "rationale": "Degraded mode: No API key provided",
             }
 
         parts: List[Dict[str, Any]] = []
@@ -48,7 +52,7 @@ class GeminiClient:
             for item in media_files:
                 mime_type = item.get("mime_type", "application/octet-stream")
                 data_b64 = None
-                
+
                 if "path" in item and os.path.exists(item["path"]):
                     with open(item["path"], "rb") as f:
                         data_b64 = base64.b64encode(f.read()).decode("utf-8")
@@ -60,12 +64,7 @@ class GeminiClient:
                         data_b64 = raw_data
 
                 if data_b64:
-                    parts.append({
-                        "inline_data": {
-                            "mime_type": mime_type,
-                            "data": data_b64
-                        }
-                    })
+                    parts.append({"inline_data": {"mime_type": mime_type, "data": data_b64}})
 
         # Append prompt
         parts.append({"text": prompt})
@@ -80,25 +79,26 @@ class GeminiClient:
 
         async with httpx.AsyncClient(timeout=25.0) as client:
             for target_model in candidate_models:
-                url = f"{self.base_url}/models/{target_model}:generateContent?key={self.api_key}"
+                url = f"{self.base_url}/models/{target_model}:generateContent"
                 request_body: Dict[str, Any] = {
                     "contents": [{"parts": parts}],
                     "generationConfig": {
                         "response_mime_type": "application/json",
-                        "temperature": temperature
-                    }
+                        "temperature": temperature,
+                    },
                 }
 
                 if system_instruction:
-                    request_body["system_instruction"] = {
-                        "parts": [{"text": system_instruction}]
-                    }
+                    request_body["system_instruction"] = {"parts": [{"text": system_instruction}]}
 
                 try:
                     response = await client.post(
                         url,
                         json=request_body,
-                        headers={"Content-Type": "application/json"}
+                        headers={
+                            "Content-Type": "application/json",
+                            "x-goog-api-key": self.api_key,
+                        },
                     )
 
                     if response.status_code == 200:
@@ -107,30 +107,42 @@ class GeminiClient:
                         if candidates:
                             text_response = candidates[0]["content"]["parts"][0]["text"].strip()
                             parsed = json.loads(text_response)
+                            if not isinstance(parsed, dict):
+                                raise ValueError("Gemini response must be a JSON object")
                             parsed["status"] = "success"
                             parsed["_model_used"] = target_model
                             return parsed
-                    
-                    logger.warning(f"Model {target_model} failed (HTTP {response.status_code}): {response.text[:200]}")
+
+                    logger.warning(
+                        f"Model {target_model} failed (HTTP {response.status_code}): {response.text[:200]}"
+                    )
                     last_error = f"HTTP {response.status_code} on {target_model}"
 
                 except httpx.TimeoutException:
-                    logger.warning(f"Timeout on model {target_model}, attempting next available candidate...")
+                    logger.warning(
+                        f"Timeout on model {target_model}, attempting next available candidate..."
+                    )
                     last_error = f"Timeout on {target_model}"
+                except httpx.RequestError as e:
+                    logger.warning(f"Request failed for {target_model}: {e}")
+                    last_error = f"Request failed on {target_model}"
                 except json.JSONDecodeError as e:
                     logger.warning(f"JSON decode failed on {target_model}: {e}")
                     last_error = f"Invalid JSON on {target_model}"
-                except Exception as e:
-                    logger.warning(f"Error invoking {target_model}: {e}")
-                    last_error = str(e)
+                except (KeyError, IndexError, TypeError, ValueError) as e:
+                    logger.warning(f"Invalid structured response from {target_model}: {e}")
+                    last_error = f"Invalid response from {target_model}"
 
         # If all candidates fail or degrade gracefully
-        logger.error(f"All Gemini models exhausted. Returning structured degraded state: {last_error}")
+        logger.error(
+            f"All Gemini models exhausted. Returning structured degraded state: {last_error}"
+        )
         return {
             "status": "degraded",
             "error": last_error,
             "confidence": 0.0,
-            "rationale": f"API Failover exhausted: {last_error}"
+            "rationale": f"API Failover exhausted: {last_error}",
         }
+
 
 gemini_client = GeminiClient()

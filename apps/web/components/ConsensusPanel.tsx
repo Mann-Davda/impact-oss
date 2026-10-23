@@ -3,6 +3,7 @@
 import React from "react";
 import { GitMerge, CheckCircle, AlertCircle, HelpCircle, TrendingUp, Sparkles } from "lucide-react";
 import { Incident } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface ConsensusPanelProps {
   incident: Incident;
@@ -10,6 +11,7 @@ interface ConsensusPanelProps {
 }
 
 export function ConsensusPanel({ incident, onOpenExplainability }: ConsensusPanelProps) {
+  const { t } = useLocale();
   // Extract per-agent runs
   const agentMap: Record<string, number> = {};
   for (const step of incident.confidence_evolution || []) {
@@ -30,7 +32,7 @@ export function ConsensusPanel({ incident, onOpenExplainability }: ConsensusPane
         <div className="flex items-center gap-2">
           <GitMerge className="w-5 h-5 text-alert" />
           <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-            Multi-Agent Consensus & Evolution
+            {t("Multi-Agent Consensus & Evolution")}
           </h2>
         </div>
 
@@ -40,39 +42,39 @@ export function ConsensusPanel({ incident, onOpenExplainability }: ConsensusPane
           className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center gap-1.5 shadow-sm"
         >
           <HelpCircle className="w-3.5 h-3.5 text-alert" />
-          Why? (Explainability Replay)
+          {t("Why? (Explainability Replay)")}
         </button>
       </div>
 
       {/* Per-Agent Scores Bar */}
       <div>
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 block">
-          Per-Agent Epistemic Confidence
+          {t("Per-Agent Epistemic Confidence")}
         </span>
         <div className="grid grid-cols-4 gap-2">
           <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-border-light dark:border-border-dark">
-            <span className="text-[10px] font-semibold text-slate-400 block">Intake</span>
+            <span className="text-[10px] font-semibold text-slate-400 block">{t("Intake")}</span>
             <span className="text-base font-black text-slate-800 dark:text-slate-200">
               {(intakeScore * 100).toFixed(0)}%
             </span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-border-light dark:border-border-dark">
-            <span className="text-[10px] font-semibold text-slate-400 block">Intent</span>
+            <span className="text-[10px] font-semibold text-slate-400 block">{t("Intent")}</span>
             <span className="text-base font-black text-slate-800 dark:text-slate-200">
               {(intentScore * 100).toFixed(0)}%
             </span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-border-light dark:border-border-dark">
-            <span className="text-[10px] font-semibold text-slate-400 block">Verify</span>
+            <span className="text-[10px] font-semibold text-slate-400 block">{t("Verify")}</span>
             <span className="text-base font-black text-success">
               {(verifyScore * 100).toFixed(0)}%
             </span>
           </div>
 
           <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-border-light dark:border-border-dark">
-            <span className="text-[10px] font-semibold text-slate-400 block">Risk</span>
+            <span className="text-[10px] font-semibold text-slate-400 block">{t("Risk")}</span>
             <span className="text-base font-black text-critical">
               {(riskScore * 100).toFixed(0)}%
             </span>
@@ -84,7 +86,7 @@ export function ConsensusPanel({ incident, onOpenExplainability }: ConsensusPane
       <div>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5 text-success" /> Confidence Evolution Over Time
+            <TrendingUp className="w-3.5 h-3.5 text-success" /> {t("Confidence Evolution Over Time")}
           </span>
           <span className="font-mono text-[10px] text-slate-400">
             Final: {(consensusScore * 100).toFixed(1)}%
@@ -119,7 +121,7 @@ export function ConsensusPanel({ incident, onOpenExplainability }: ConsensusPane
         <div className="p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40">
           <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-400 mb-1.5">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-            Consensus Agreement Factors
+            {t("Consensus Agreement Factors")}
           </div>
           <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
             <li>Unanimous confirmation of severe Mutha river inundation at Bund Garden.</li>
@@ -132,7 +134,7 @@ export function ConsensusPanel({ incident, onOpenExplainability }: ConsensusPane
         <div className="p-3 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40">
           <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-400 mb-1.5">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-            Epistemic Variances & Uncertainties
+            {t("Epistemic Variances & Uncertainties")}
           </div>
           <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
             <li>Ground photo captures river channel; audio call describes ground-floor indoor flooding nearby.</li>

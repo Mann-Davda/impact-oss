@@ -1,20 +1,20 @@
-import os
 import logging
-from typing import Dict, Any, List, Optional
 from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from typing import Any, Dict, List, Optional
 
-from app.db.models import Incident, IncidentInput, Action, Resource
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.agents.consensus_agent import consensus_agent
 from app.agents.intake_agent import intake_agent
 from app.agents.intent_agent import intent_agent
-from app.agents.verification_agent import verification_agent
 from app.agents.risk_agent import risk_agent
-from app.agents.consensus_agent import consensus_agent
+from app.agents.verification_agent import verification_agent
+from app.db.models import Action, Incident, IncidentInput, Resource
 from app.services.weather_feed import weather_feed_service
-from app.config import settings
 
 logger = logging.getLogger(__name__)
+
 
 class IncidentPipelineService:
     """
@@ -23,11 +23,31 @@ class IncidentPipelineService:
     """
 
     @staticmethod
+    async def mark_unassessed(incident: Incident, db: AsyncSession, reason: str) -> Incident:
+        incident.title = "Unassessed incident report"
+        incident.category = "unclassified"
+        incident.location_name = "Unknown"
+        incident.status = "degraded"
+        incident.risk_level = "unassessed"
+        incident.risk_score = 0.0
+        incident.consensus_score = 0.0
+        incident.confidence_min = 0.0
+        incident.confidence_max = 1.0
+        incident.is_emergency = False
+        incident.emergency_rationale = reason
+        incident.intent_summary = {"status": "degraded", "rationale": reason}
+        incident.confidence_evolution = []
+        incident.updated_at = datetime.utcnow()
+        await db.commit()
+        await db.refresh(incident)
+        return incident
+
+    @staticmethod
     async def run_pipeline(
         db: AsyncSession,
         situation_text: str = "",
         media_files: Optional[List[Dict[str, Any]]] = None,
-        incident_id: Optional[str] = None
+        incident_id: Optional[str] = None,
     ) -> Incident:
         media_files = media_files or []
 
@@ -43,7 +63,7 @@ class IncidentPipelineService:
                 title="Pune Mutha River Flood Alert",
                 description=situation_text or "Multimodal emergency submission",
                 category="flood",
-                status="processing"
+                status="processing",
             )
             db.add(incident)
 
@@ -59,7 +79,7 @@ class IncidentPipelineService:
                 filename=media.get("filename"),
                 file_path=media.get("path"),
                 mime_type=media.get("mime_type"),
-                content_text=media.get("text")
+                content_text=media.get("text"),
             )
             db.add(inp)
 
@@ -68,7 +88,7 @@ class IncidentPipelineService:
                 incident_id=incident.id,
                 input_type="text",
                 source="citizen_upload",
-                content_text=situation_text
+                content_text=situation_text,
             )
             db.add(text_inp)
 
@@ -78,61 +98,88 @@ class IncidentPipelineService:
         weather_data = weather_feed_service.get_pune_weather_context()
 
         # 4. Run Intake Agent
-        intake_payload = {
-            "media_files": media_files,
-            "situation_text": situation_text
-        }
+        intake_payload = {"media_files": media_files, "situation_text": situation_text}
         intake_res = await intake_agent.execute_tracked(incident.id, intake_payload, db)
+        if intake_res.get("status") != "success":
+            return await IncidentPipelineService.mark_unassessed(
+                incident,
+                db,
+                intake_res.get("rationale", "Input analysis is unavailable."),
+            )
 
         # 5. Run Intent Agent
-        intent_payload = {
-            "intake_data": intake_res
-        }
+        intent_payload = {"intake_data": intake_res}
         intent_res = await intent_agent.execute_tracked(incident.id, intent_payload, db)
+        if intent_res.get("status") != "success":
+            return await IncidentPipelineService.mark_unassessed(
+                incident,
+                db,
+                intent_res.get("rationale", "Intent analysis is unavailable."),
+            )
 
         # 6. Run Verification Agent
         verify_payload = {
             "intake_data": intake_res,
             "intent_data": intent_res,
             "weather_data": weather_data,
-            "media_files": media_files
+            "media_files": media_files,
         }
         verify_res = await verification_agent.execute_tracked(incident.id, verify_payload, db)
+        if verify_res.get("status") != "success":
+            return await IncidentPipelineService.mark_unassessed(
+                incident,
+                db,
+                verify_res.get("rationale", "Evidence verification is unavailable."),
+            )
 
         # 7. Run Risk Agent
         risk_payload = {
             "intake_data": intake_res,
             "intent_data": intent_res,
             "verification_data": verify_res,
-            "weather_data": weather_data
+            "weather_data": weather_data,
         }
         risk_res = await risk_agent.execute_tracked(incident.id, risk_payload, db)
+        if risk_res.get("status") != "success":
+            return await IncidentPipelineService.mark_unassessed(
+                incident,
+                db,
+                risk_res.get("rationale", "Risk assessment is unavailable."),
+            )
 
         # 8. Run Consensus Agent
         consensus_payload = {
             "intake_res": intake_res,
             "intent_res": intent_res,
             "verify_res": verify_res,
-            "risk_res": risk_res
+            "risk_res": risk_res,
         }
         consensus_res = await consensus_agent.execute_tracked(incident.id, consensus_payload, db)
+        if consensus_res.get("status") != "success":
+            return await IncidentPipelineService.mark_unassessed(
+                incident,
+                db,
+                consensus_res.get("rationale", "Consensus assessment is unavailable."),
+            )
 
         # 9. Update Incident Record
-        incident.title = intake_res.get("incident_title", "Mutha River Flood Inundation & Trapped Citizen Rescue")
+        incident.title = intake_res["incident_title"]
         incident.description = intake_res.get("situational_summary", situation_text)
-        incident.category = intake_res.get("hazard_category", "riverine_flood")
-        incident.location_name = intake_res.get("detected_location", "Bund Garden, Pune, Maharashtra")
-        
+        incident.category = intake_res["hazard_category"]
+        incident.location_name = intake_res["detected_location"]
+
         # Risk & consensus scores
-        incident.risk_level = risk_res.get("threat_level", "critical")
-        incident.risk_score = float(risk_res.get("risk_score", 0.92))
-        incident.consensus_score = float(consensus_res.get("consensus_score", 0.89))
-        incident.confidence_min = float(risk_res.get("confidence_min", 0.82))
-        incident.confidence_max = float(risk_res.get("confidence_max", 0.96))
-        
-        incident.is_emergency = bool(risk_res.get("is_emergency", incident.risk_level == "critical"))
-        incident.emergency_rationale = risk_res.get("emergency_rationale", "Emergency mode triggered due to critical threat level.")
-        
+        incident.risk_level = risk_res["threat_level"]
+        incident.risk_score = float(risk_res["risk_score"])
+        incident.consensus_score = float(consensus_res["consensus_score"])
+        incident.confidence_min = float(risk_res["confidence_min"])
+        incident.confidence_max = float(risk_res["confidence_max"])
+
+        incident.is_emergency = bool(
+            risk_res.get("is_emergency", incident.risk_level == "critical")
+        )
+        incident.emergency_rationale = risk_res["emergency_rationale"]
+
         incident.status = "critical" if incident.is_emergency else "verified"
         incident.intent_summary = intent_res
         incident.confidence_evolution = consensus_res.get("confidence_evolution", [])
@@ -149,7 +196,7 @@ class IncidentPipelineService:
             status="draft",
             content_en="Deploy specialized motorized inflatable rescue boat to Bund Garden riverbank sector. Priority mission: Extract trapped elderly citizen from ground-level structure and transfer to standby geriatric ambulance unit.",
             content_mr="बंड गार्डन नदीकाठ परिसरात तातडीने एनडीआरएफ रबर बोट आणि वैद्यकीय पथक पाठवा. पूरबाधित घरात अडकलेल्या वृद्ध आजींची सुरक्षित सुटका करून त्यांना रुग्णवाहिकेत हलवा.",
-            requires_human_approval=True
+            requires_human_approval=True,
         )
         # Action 2: Citizen Evacuation Advisory
         act2 = Action(
@@ -161,7 +208,7 @@ class IncidentPipelineService:
             status="draft",
             content_en="URGENT: Mutha River level has exceeded danger threshold due to Khadakwasla discharge. Residents along Bund Garden corridor must move immediately to designated higher-ground shelters. Avoid Babasaheb Ambedkar Bridge approach.",
             content_mr="तातडीची सूचना: खडकवासला धरणातून पाण्याचा विसर्ग वाढल्यामुळे मुळा-मुठा नदीने धोक्याची पातळी ओलांडली आहे. बंड गार्डन भागातील नागरिकांनी तात्काळ जवळच्या सुरक्षित निवारा केंद्रात स्थलांतरित व्हावे.",
-            requires_human_approval=True
+            requires_human_approval=True,
         )
         db.add(act1)
         db.add(act2)
@@ -179,7 +226,7 @@ class IncidentPipelineService:
                     longitude=73.8821,
                     status="available",
                     capacity=6,
-                    source="mock"
+                    source="mock",
                 ),
                 Resource(
                     incident_id=incident.id,
@@ -190,7 +237,7 @@ class IncidentPipelineService:
                     longitude=73.8742,
                     status="available",
                     capacity=2,
-                    source="mock"
+                    source="mock",
                 ),
                 Resource(
                     incident_id=incident.id,
@@ -201,8 +248,8 @@ class IncidentPipelineService:
                     longitude=73.8812,
                     status="available",
                     capacity=250,
-                    source="mock"
-                )
+                    source="mock",
+                ),
             ]
             for r in resources_demo:
                 db.add(r)
@@ -210,5 +257,6 @@ class IncidentPipelineService:
         await db.commit()
         await db.refresh(incident)
         return incident
+
 
 incident_pipeline_service = IncidentPipelineService()

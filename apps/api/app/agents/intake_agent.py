@@ -1,24 +1,25 @@
 import logging
-from typing import Dict, Any, List
+from typing import Any, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.agents.base import BaseAgent
 from app.agents.gemini_client import gemini_client
 
 logger = logging.getLogger(__name__)
+
 
 class IntakeAgent(BaseAgent):
     """
     Intake Agent: Parses raw multimodal inputs (images, audio clips, text, PDFs),
     extracts metadata, classifies incident category, detects language, and performs initial transcription.
     """
+
     def __init__(self):
         super().__init__(name="intake", phase="intake_parsing")
 
     async def process(
-        self,
-        incident_id: str,
-        input_payload: Dict[str, Any],
-        db: AsyncSession
+        self, incident_id: str, input_payload: Dict[str, Any], db: AsyncSession
     ) -> Dict[str, Any]:
         media_files = input_payload.get("media_files", [])
         situation_text = input_payload.get("situation_text", "")
@@ -51,26 +52,24 @@ Respond ONLY with valid JSON with the following structure:
 }}
 """
         response = await gemini_client.generate_structured(
-            prompt=prompt,
-            media_files=media_files,
-            temperature=0.1
+            prompt=prompt, media_files=media_files, temperature=0.1
         )
 
         if response.get("status") == "degraded":
-            # Graceful degraded fallback heuristics
             return {
-                "incident_title": "Pune River Inundation Report",
-                "hazard_category": "riverine_flood",
-                "detected_location": "Bund Garden, Pune, Maharashtra",
-                "audio_transcript_original": "माझी आजी अडकली आहे आणि ती बाहेर पडू शकत नाही.",
-                "audio_transcript_english": "My grandmother is trapped and cannot get out.",
-                "visual_observations": "Severe river flooding observed submerging riverbanks and riverside wall.",
-                "situational_summary": "Distress call reporting elderly person trapped amid dangerous Mutha river flood levels.",
-                "confidence_score": 0.75,
-                "rationale": "Degraded heuristic baseline fallback: Parsed local audio keywords and flood markers.",
-                "status": "degraded"
+                "incident_title": "Unassessed incident report",
+                "hazard_category": "unclassified",
+                "detected_location": "Unknown",
+                "audio_transcript_original": None,
+                "audio_transcript_english": None,
+                "visual_observations": None,
+                "situational_summary": situation_text or "Inputs were received but not analyzed.",
+                "confidence_score": 0.0,
+                "rationale": "Gemini is unavailable; submitted inputs have not been interpreted.",
+                "status": "degraded",
             }
 
         return response
+
 
 intake_agent = IntakeAgent()

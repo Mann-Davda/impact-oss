@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { UploadCloud, Mic, FileText, Sparkles, Check, AlertCircle, Play, Image as ImageIcon } from "lucide-react";
-import { triggerPuneDemo, submitCustomIncident, Incident } from "../lib/api";
+import { getErrorMessage, triggerPuneDemo, submitCustomIncident, Incident } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface IncidentSubmissionProps {
   onIncidentCreated: (incident: Incident) => void;
@@ -10,6 +11,7 @@ interface IncidentSubmissionProps {
 }
 
 export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmissionProps) {
+  const { t } = useLocale();
   const [situationText, setSituationText] = useState(
     "Severe water accumulation along Mutha riverbanks at Bund Garden, Pune. Resident reports ground-floor home flooded with water up to window level; elderly grandmother trapped inside unable to evacuate. IMD active alert."
   );
@@ -25,8 +27,8 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
       const incident = await triggerPuneDemo();
       onIncidentCreated(incident);
       if (onClose) onClose();
-    } catch (err: any) {
-      alert(`Error triggering Pune Demo: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Error triggering Pune Demo: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -49,8 +51,8 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
       const incident = await submitCustomIncident(formData);
       onIncidentCreated(incident);
       if (onClose) onClose();
-    } catch (err: any) {
-      alert(`Submission failed: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Submission failed: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -63,10 +65,10 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
         <div>
           <h2 className="text-base font-extrabold uppercase tracking-wide text-primary dark:text-white flex items-center gap-2">
             <UploadCloud className="w-5 h-5 text-alert" />
-            Ingest Crisis Incident Report
+            {t("Ingest Crisis Incident Report")}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Submit multimodal telemetry (photograph, voice note, situational text) for multi-agent verification.
+            {t("Submit multimodal telemetry (photograph, voice note, situational text) for multi-agent verification.")}
           </p>
         </div>
 
@@ -78,7 +80,7 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
           className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold text-xs flex items-center gap-2 hover:opacity-95 shadow-spatial-sm border border-white/20 transition-all"
         >
           <Sparkles className="w-4 h-4 text-alert" />
-          {isSubmitting ? "Processing Pipeline..." : "Run Pune Flood Demo (1-Click)"}
+          {isSubmitting ? t("Processing Pipeline...") : t("Run Pune Flood Demo (1-Click)")}
         </button>
       </div>
 
@@ -93,7 +95,7 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
               Demo Preset: Pune Mutha River Flood Scenario
             </h4>
             <p className="text-[11px] text-slate-500">
-              Pre-loaded with Bund Garden photo, Marathi audio note (*"माझी आजी अडकली आहे..."*), and IMD alert.
+              Pre-loaded with Bund Garden photo, Marathi audio note (*&quot;माझी आजी अडकली आहे...&quot;*), and IMD alert.
             </p>
           </div>
         </div>
@@ -138,7 +140,7 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
             <Mic className="w-8 h-8 text-slate-400" />
             <div>
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                {selectedAudio ? selectedAudio.name : "Voice Distress Recording (Any Language)"}
+                {selectedAudio ? selectedAudio.name : t("Voice Distress Recording (Any Language)")}
               </span>
               <span className="text-[10px] text-slate-400">
                 {useSampleAssets ? "Preset: marathi_voice_note.mp3 ('माझी आजी अडकली आहे...')" : "MP3, WAV, M4A"}
@@ -158,14 +160,14 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
         {/* Situational Text */}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
-            Situational Context & Eyewitness Text
+            {t("Situational Context & Eyewitness Text")}
           </label>
           <textarea
             rows={3}
             value={situationText}
             onChange={(e) => setSituationText(e.target.value)}
             className="w-full p-3 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#111B2E] text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Describe observed conditions, trapped individuals, and approximate location..."
+            placeholder={t("Describe observed conditions, trapped individuals, and approximate location...")}
           />
         </div>
 
@@ -177,7 +179,7 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700"
             >
-              Cancel
+              {t("Cancel")}
             </button>
           )}
 
@@ -187,7 +189,7 @@ export function IncidentSubmission({ onIncidentCreated, onClose }: IncidentSubmi
             className="px-6 py-2.5 rounded-xl bg-primary text-white font-bold text-xs shadow-spatial-sm hover:bg-slate-800 transition-colors flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-alert" />
-            {isSubmitting ? "Running Agents..." : "Submit to Autonomous Pipeline"}
+            {isSubmitting ? t("Running Agents...") : t("Submit to Autonomous Pipeline")}
           </button>
         </div>
       </form>

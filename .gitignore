@@ -30,6 +30,7 @@ uploads/
 node_modules/
 .next/
 out/
+.vercel/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -40,6 +41,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.refact/
 
 # OS
 .DS_Store

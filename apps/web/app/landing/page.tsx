@@ -18,7 +18,7 @@ export default function LandingStoryPage() {
             <Volume2 className="w-4 h-4" /> [AUDIO] marathi_voice_note.mp3 (Distress Speech)
           </div>
           <div className="p-2 rounded bg-black/50 text-[11px] text-slate-400">
-            "माझी आजी अडकली आहे आणि ती बाहेर पडू शकत नाही..."
+            &quot;माझी आजी अडकली आहे आणि ती बाहेर पडू शकत नाही...&quot;
           </div>
           <div className="text-slate-400 text-[10px]">
             + Visual watermarks: Bund Garden wall submerged<br/>
@@ -36,7 +36,7 @@ export default function LandingStoryPage() {
       graphic: (
         <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono space-y-1.5">
           <div className="text-emerald-400 font-bold">✓ Language Identified: Marathi (मराठी)</div>
-          <div className="text-slate-300 text-[11px]">Transcript: "My grandmother is trapped and cannot get out."</div>
+          <div className="text-slate-300 text-[11px]">Transcript: &quot;My grandmother is trapped and cannot get out.&quot;</div>
           <div className="text-blue-400 text-[11px]">Primary Intent: Emergency Life Safety & Extraction</div>
           <div className="text-slate-400 text-[10px]">Triage Urgency: CRITICAL • Mobility: Impaired</div>
         </div>
@@ -79,7 +79,7 @@ export default function LandingStoryPage() {
             Target: Bund Garden Bank • ETA: 4 minutes
           </div>
           <div className="text-slate-400 text-[10px]">
-            मराठी: "बंड गार्डन नदीकाठ परिसरात तातडीने एनडीआरएफ रबर बोट पाठवा..."
+            मराठी: &quot;बंड गार्डन नदीकाठ परिसरात तातडीने एनडीआरएफ रबर बोट पाठवा...&quot;
           </div>
           <div className="text-critical font-bold text-[10px]">
             Status: PENDING HUMAN OPERATOR SIGN-OFF (Rule 4)

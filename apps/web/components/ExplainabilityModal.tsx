@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, HelpCircle, ArrowLeft, ArrowRight, CheckCircle2, ShieldAlert, Cpu, FileSearch } from "lucide-react";
 import { Incident } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface ExplainabilityModalProps {
   incident: Incident;
@@ -11,6 +12,7 @@ interface ExplainabilityModalProps {
 }
 
 export function ExplainabilityModal({ incident, isOpen, onClose }: ExplainabilityModalProps) {
+  const { t } = useLocale();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   if (!isOpen) return null;
@@ -98,7 +100,7 @@ export function ExplainabilityModal({ incident, isOpen, onClose }: Explainabilit
             <HelpCircle className="w-5 h-5 text-alert" />
             <div>
               <h2 className="text-base font-extrabold text-primary dark:text-white">
-                Explainability Replay: Why was this decided?
+                {t("Explainability Replay: Why was this decided?")}
               </h2>
               <span className="text-xs text-slate-500 font-mono">
                 Step {currentStepIndex + 1} of {steps.length}: {currentStep.agent}
@@ -167,7 +169,7 @@ export function ExplainabilityModal({ incident, isOpen, onClose }: Explainabilit
           {/* Reasoning Summary */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-border-light dark:border-border-dark">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">
-              Factual AI Reasoning
+              {t("Factual AI Reasoning")}
             </span>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
               {currentStep.explanation}

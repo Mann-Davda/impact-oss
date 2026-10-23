@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Sparkles, Send, X, Bot, User, Shield } from "lucide-react";
 import { Incident } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface AskImpactOSCopilotProps {
   incident: Incident;
@@ -15,6 +16,7 @@ interface Message {
 }
 
 export function AskImpactOSCopilot({ incident }: AskImpactOSCopilotProps) {
+  const { t } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const [inputQuery, setInputQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([
@@ -70,7 +72,7 @@ export function AskImpactOSCopilot({ incident }: AskImpactOSCopilotProps) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-40">
+    <div className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
       {/* Floating Pill Button (Liquid Glass Accent) */}
       {!isOpen && (
         <button
@@ -80,14 +82,14 @@ export function AskImpactOSCopilot({ incident }: AskImpactOSCopilotProps) {
           <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-[11px] font-black">
             Ω
           </div>
-          <span>Ask ImpactOS Copilot</span>
+          <span>{t("Ask ImpactOS Copilot")}</span>
           <span className="w-2 h-2 rounded-full bg-success animate-ping"></span>
         </button>
       )}
 
       {/* Floating Copilot Window (Liquid Glass Accent) */}
       {isOpen && (
-        <div className="liquid-glass w-[380px] sm:w-[420px] rounded-2xl overflow-hidden shadow-glass border border-white/30 dark:border-white/10 flex flex-col h-[500px] transition-all animate-in fade-in zoom-in-95">
+        <div className="liquid-glass w-[calc(100vw-2rem)] max-w-[420px] rounded-2xl overflow-hidden shadow-glass border border-white/30 dark:border-white/10 flex flex-col h-[min(500px,calc(100dvh-5rem))] transition-all animate-in fade-in zoom-in-95">
           {/* Header */}
           <div className="px-4 py-3 border-b border-white/20 dark:border-white/10 flex items-center justify-between bg-primary/10 dark:bg-black/20">
             <div className="flex items-center gap-2">
@@ -104,6 +106,7 @@ export function AskImpactOSCopilot({ incident }: AskImpactOSCopilotProps) {
 
             <button
               onClick={() => setIsOpen(false)}
+              aria-label={t("Close ImpactOS Copilot")}
               className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
               <X className="w-4 h-4" />
@@ -154,13 +157,13 @@ export function AskImpactOSCopilot({ incident }: AskImpactOSCopilotProps) {
               👵 Trapped Resident
             </button>
             <button
-              onClick={() => setInputQuery("What is the nearest evacuation shelter?")}
+              onClick={() => setInputQuery(t("What is the nearest evacuation shelter?"))}
               className="px-2 py-0.5 rounded-full bg-white/40 dark:bg-white/5 border border-white/20 whitespace-nowrap hover:bg-white/60"
             >
               🏠 Nearest Shelter
             </button>
             <button
-              onClick={() => setInputQuery("What is the river water level and dam discharge?")}
+              onClick={() => setInputQuery(t("What is the river water level and dam discharge?"))}
               className="px-2 py-0.5 rounded-full bg-white/40 dark:bg-white/5 border border-white/20 whitespace-nowrap hover:bg-white/60"
             >
               🌊 River Gauge Level
@@ -171,14 +174,16 @@ export function AskImpactOSCopilot({ incident }: AskImpactOSCopilotProps) {
           <div className="p-3 border-t border-white/20 dark:border-white/10 flex items-center gap-2 bg-white/30 dark:bg-black/30">
             <input
               type="text"
+              aria-label="Ask ImpactOS Copilot"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Ask about evidence, evacuation, river levels..."
+              placeholder={t("Ask about evidence, evacuation, river levels...")}
               className="flex-1 bg-transparent border-none outline-none text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400"
             />
             <button
               onClick={handleSend}
+              aria-label={t("Send message")}
               className="p-1.5 rounded-lg bg-primary text-white hover:bg-slate-800 transition-colors"
             >
               <Send className="w-3.5 h-3.5" />

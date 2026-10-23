@@ -1,79 +1,27 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, Play, Clock, AlertTriangle, ShieldCheck, HelpCircle, ArrowRight, RefreshCw } from "lucide-react";
-import { fetchSimulation, SimulationResult, SimulationScenario } from "../lib/api";
+import { Sparkles, RefreshCw } from "lucide-react";
+import { fetchSimulation, getErrorMessage, SimulationResult } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface SimulationViewProps {
   incidentId: string;
 }
 
 export function SimulationView({ incidentId }: SimulationViewProps) {
+  const { t } = useLocale();
   const [customQuery, setCustomQuery] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
-  const [result, setResult] = useState<SimulationResult>({
-    disclaimer: "SIMULATION ESTIMATES: NOT CERTAIN PREDICTIONS",
-    confidence_score: 0.88,
-    rationale: "Comparative delta modeling indicates immediate action minimizes life-safety risk by 78% over delay.",
-    scenarios: [
-      {
-        scenario_id: "act_now",
-        name: "Immediate Amphibious Evacuation (Act Now)",
-        description: "Deploy NDRF Inflatable Boat 4 and Sassoon ALS Paramedics immediately to Bund Garden bank.",
-        estimated_evacuation_time_mins: [25, 45],
-        estimated_people_rescued: [1, 4],
-        health_risk_exposure: "minimal",
-        assumptions: [
-          "River current remains under 4.5 knots during crossing",
-          "Ground-floor entrance remains accessible via boat bow",
-          "ALS unit is staged within 1.5 km of rendezvous point"
-        ],
-        confidence_score: 0.91,
-        recommendation: "RECOMMENDED",
-        reasoning: "Fastest extraction window before upstream Khadakwasla surge peak reaches Bund Garden corridor."
-      },
-      {
-        scenario_id: "delay_3h",
-        name: "Delayed Response (Shelter-in-Place for 3 Hours)",
-        description: "Wait for daytime visibility and potential dam discharge moderation before dispatching resources.",
-        estimated_evacuation_time_mins: [90, 180],
-        estimated_people_rescued: [0, 2],
-        health_risk_exposure: "severe",
-        assumptions: [
-          "Water level rises by an additional 35–45 cm into residential living space",
-          "Electrical short circuits and utility outages occur",
-          "Elderly patient experiences acute respiratory/hypothermic distress"
-        ],
-        confidence_score: 0.84,
-        recommendation: "NOT RECOMMENDED",
-        reasoning: "High risk of life loss due to trapped resident's inability to climb to roof level."
-      },
-      {
-        scenario_id: "bridge_failure",
-        name: "Contingency: Babasaheb Ambedkar Bridge Submerged",
-        description: "Primary arterial crossing becomes impassable; divert all medical transport via Sangamwadi route.",
-        estimated_evacuation_time_mins: [50, 75],
-        estimated_people_rescued: [1, 4],
-        health_risk_exposure: "moderate",
-        assumptions: [
-          "Babasaheb Ambedkar Bridge closed to all vehicular traffic by traffic police",
-          "Sangamwadi bypass remains clear of flood backwaters",
-          "Secondary ambulance rendezvous point activated at Boat Club lane"
-        ],
-        confidence_score: 0.87,
-        recommendation: "HIGH RISK CONTINGENCY",
-        reasoning: "Adds 20-30 minutes transport delay to Sassoon Hospital; requires immediate route broadcast to dispatchers."
-      }
-    ]
-  });
+  const [result, setResult] = useState<SimulationResult | null>(null);
 
   const handleRunSimulation = async (query?: string) => {
     setIsSimulating(true);
     try {
       const res = await fetchSimulation(incidentId, query || customQuery);
       setResult(res);
-    } catch (e: any) {
-      alert(`Simulation error: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Simulation error: ${getErrorMessage(e)}`);
     } finally {
       setIsSimulating(false);
     }
@@ -87,17 +35,19 @@ export function SimulationView({ incidentId }: SimulationViewProps) {
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-alert" />
             <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-              Scenario Simulation & Counterfactual Modeler
+              {t("Scenario Simulation & Counterfactual Modeler")}
             </h2>
           </div>
           <span className="text-[10px] font-bold text-amber-500 uppercase mt-0.5 block">
-            {result.disclaimer}
+            {t(result?.disclaimer ?? "No simulation results yet.")}
           </span>
         </div>
 
-        <span className="text-xs font-mono font-bold text-slate-500">
-          Model Confidence: {(result.confidence_score * 100).toFixed(0)}%
-        </span>
+        {result && result.scenarios.length > 0 && (
+          <span className="text-xs font-mono font-bold text-slate-500">
+            {t("Model Confidence:")} {(result.confidence_score * 100).toFixed(0)}%
+          </span>
+        )}
       </div>
 
       {/* Interactive What-If Query Box */}
@@ -106,7 +56,7 @@ export function SimulationView({ incidentId }: SimulationViewProps) {
           type="text"
           value={customQuery}
           onChange={(e) => setCustomQuery(e.target.value)}
-          placeholder="Ask a what-if query (e.g. 'What if Khadakwasla discharge increases to 50,000 cusecs?')..."
+          placeholder={t("Ask a what-if query (e.g. 'What if Khadakwasla discharge increases to 50,000 cusecs?')...")}
           className="flex-1 bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none"
         />
         <button
@@ -115,13 +65,19 @@ export function SimulationView({ incidentId }: SimulationViewProps) {
           className="w-full sm:w-auto px-4 py-2 rounded-lg bg-primary text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors shrink-0"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isSimulating ? "animate-spin" : ""}`} />
-          {isSimulating ? "Evaluating..." : "Run Scenario Simulation"}
+          {isSimulating ? t("Evaluating...") : t("Run Scenario Simulation")}
         </button>
       </div>
 
       {/* 3 Comparative Scenario Cards */}
+      {result && result.scenarios.length === 0 && (
+        <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+          {t("Simulation is unavailable; no scenario estimates were generated.")}
+        </p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {result.scenarios.map((sc) => {
+        {result?.scenarios.map((sc) => {
           const isRec = sc.recommendation.includes("RECOMMENDED") && !sc.recommendation.includes("NOT");
           const isBad = sc.recommendation.includes("NOT");
 
@@ -164,13 +120,13 @@ export function SimulationView({ incidentId }: SimulationViewProps) {
                 {/* Outcome Ranges */}
                 <div className="grid grid-cols-2 gap-2 mt-3 p-2 rounded-lg bg-white/80 dark:bg-[#111B2E]/80 border border-slate-200 dark:border-slate-800 text-[10px]">
                   <div>
-                    <span className="text-slate-400 block font-bold">Evacuation Time</span>
+                    <span className="text-slate-400 block font-bold">{t("Evacuation Time")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
                       {sc.estimated_evacuation_time_mins[0]} – {sc.estimated_evacuation_time_mins[1]} mins
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block font-bold">Health Risk</span>
+                    <span className="text-slate-400 block font-bold">{t("Health Risk")}</span>
                     <span
                       className={`font-bold capitalize ${
                         sc.health_risk_exposure === "minimal"

@@ -1,4 +1,5 @@
-from typing import Dict, Any
+from typing import Any, Dict
+
 
 class AdaptiveResponseService:
     """
@@ -20,13 +21,13 @@ class AdaptiveResponseService:
                 "designated_shelter": "St. Helena High School Complex Relief Shelter (1.2 km away, elevated ground)",
                 "bilingual_instructions": {
                     "en": "URGENT SAFETY ALERT: Mutha River has crossed the danger mark. If your residence is ground-level along Bund Garden, move immediately to St. Helena Relief Shelter. Do not walk through moving floodwaters. Emergency boat teams are active.",
-                    "mr": "तातडीचा सुरक्षा इशारा: मुळा-मुठा नदीने धोक्याची पातळी ओलांडली आहे. बंड गार्डन नदीकाठच्या तळमजल्यावरील रहिवाशांनी त्वरित सेंट हेलेना निवारा केंद्रात जावे. वाहत्या पाण्यात जाऊ नका. बचाव पथके तैनात आहेत."
+                    "mr": "तातडीचा सुरक्षा इशारा: मुळा-मुठा नदीने धोक्याची पातळी ओलांडली आहे. बंड गार्डन नदीकाठच्या तळमजल्यावरील रहिवाशांनी त्वरित सेंट हेलेना निवारा केंद्रात जावे. वाहत्या पाण्यात जाऊ नका. बचाव पथके तैनात आहेत.",
                 },
                 "key_actions": [
                     "Switch off main domestic power supply before leaving",
                     "Take essential medications and identity documents in waterproof bags",
-                    "Assist elderly family members to high-ground staging areas"
-                ]
+                    "Assist elderly family members to high-ground staging areas",
+                ],
             },
             "volunteer": {
                 "role_title": "Civil Defence & Volunteer Task Order",
@@ -37,9 +38,9 @@ class AdaptiveResponseService:
                 "tasks": [
                     "Assist NDRF Boat 4 in shore-to-ambulance transfer of elderly evacuees",
                     "Distribute dry rations and blankets at St. Helena Shelter registration desk",
-                    "Cordon off flood-prone footpaths leading to Babasaheb Ambedkar Bridge"
+                    "Cordon off flood-prone footpaths leading to Babasaheb Ambedkar Bridge",
                 ],
-                "safety_briefing": "Mandatory personal flotation device (PFD) required within 50m of river edge. Do not enter water without tether."
+                "safety_briefing": "Mandatory personal flotation device (PFD) required within 50m of river edge. Do not enter water without tether.",
             },
             "government": {
                 "role_title": "Incident Commander & Government Executive Brief",
@@ -50,10 +51,10 @@ class AdaptiveResponseService:
                 "resource_commitment": {
                     "boats_deployed": "NDRF Boat Team 4 (Dedicated to Elderly Extraction)",
                     "ambulances_staged": "Sassoon Hospital ALS Unit 02 (Standby)",
-                    "shelter_capacity_active": "250 beds (St. Helena Complex)"
+                    "shelter_capacity_active": "250 beds (St. Helena Complex)",
                 },
                 "projected_cost_allocation": "INR 4,50,000 (PMC Emergency Contingency Fund)",
-                "next_milestone": "Hydrological review post-Khadakwasla Dam 14:00 discharge telemetry update."
+                "next_milestone": "Hydrological review post-Khadakwasla Dam 14:00 discharge telemetry update.",
             },
             "media": {
                 "role_title": "Official Press & Media Situation Bulletin",
@@ -66,11 +67,18 @@ class AdaptiveResponseService:
                     "Rumors of bridge collapse are REFUTED. Public is advised to use official Sangamwadi detour routes."
                 ),
                 "fact_check_box": [
-                    {"rumor": "Babasaheb Ambedkar Bridge collapsed", "verdict": "FALSE (Intact, closed as precaution)"},
-                    {"rumor": "Multiple casualties reported", "verdict": "FALSE (Zero fatalities confirmed)"}
+                    {
+                        "rumor": "Babasaheb Ambedkar Bridge collapsed",
+                        "verdict": "FALSE (Intact, closed as precaution)",
+                    },
+                    {
+                        "rumor": "Multiple casualties reported",
+                        "verdict": "FALSE (Zero fatalities confirmed)",
+                    },
                 ],
-                "spokesperson_contact": "Pune Municipal Disaster Management Cell: 020-25501000"
-            }
+                "spokesperson_contact": "Pune Municipal Disaster Management Cell: 020-25501000",
+            },
         }
+
 
 adaptive_response_service = AdaptiveResponseService()

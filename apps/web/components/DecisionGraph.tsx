@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { GitBranch, ShieldAlert, Cpu, CheckCircle2, AlertTriangle, FileText, ArrowRight, Layers, Sparkles, Navigation, X } from "lucide-react";
 import { Incident } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface DecisionGraphProps {
   incident: Incident;
@@ -22,6 +23,7 @@ interface GraphNode {
 }
 
 export function DecisionGraph({ incident, onSelectAction }: DecisionGraphProps) {
+  const { t } = useLocale();
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   // Structured nodes forming the Universal Action Graph
@@ -115,10 +117,10 @@ export function DecisionGraph({ incident, onSelectAction }: DecisionGraphProps) 
           <GitBranch className="w-5 h-5 text-alert" />
           <div>
             <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-              Universal Decision & Action Graph
+              {t("Universal Decision & Action Graph")}
             </h2>
             <span className="text-[10px] text-slate-500">
-              Centerpiece: Traceable decision logic from raw crisis signal to authorized life-safety action.
+              {t("Centerpiece: Traceable decision logic from raw crisis signal to authorized life-safety action.")}
             </span>
           </div>
         </div>
@@ -208,7 +210,7 @@ export function DecisionGraph({ incident, onSelectAction }: DecisionGraphProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
             <div className="p-3 rounded-lg bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark">
               <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">
-                Evidence Foundation
+                {t("Evidence Foundation")}
               </span>
               <p className="text-slate-700 dark:text-slate-300 text-[11px]">
                 {selectedNode.evidenceSummary}
@@ -217,7 +219,7 @@ export function DecisionGraph({ incident, onSelectAction }: DecisionGraphProps) 
 
             <div className="p-3 rounded-lg bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark">
               <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">
-                Factual Reasoning & Consensus
+                {t("Factual Reasoning & Consensus")}
               </span>
               <p className="text-slate-700 dark:text-slate-300 text-[11px]">
                 {selectedNode.reasoning}
@@ -227,7 +229,7 @@ export function DecisionGraph({ incident, onSelectAction }: DecisionGraphProps) 
         </div>
       ) : (
         <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-dashed border-border-light dark:border-border-dark text-center text-xs text-slate-500">
-          Click any decision node above to inspect its underlying evidence, confidence, and mathematical rationale.
+          {t("Click any decision node above to inspect its underlying evidence, confidence, and mathematical rationale.")}
         </div>
       )}
     </div>

@@ -17,7 +17,9 @@ import { AdaptiveResponseView } from "../components/AdaptiveResponseView";
 import { ImpactDashboard } from "../components/ImpactDashboard";
 import { CrisisDNAView } from "../components/CrisisDNAView";
 import { MobilePWAView } from "../components/MobilePWAView";
+import { EmergencyHelp } from "../components/EmergencyHelp";
 import Link from "next/link";
+import Image from "next/image";
 import {
   fetchIncidents,
   fetchIncident,
@@ -25,9 +27,11 @@ import {
   triggerPuneDemo,
   executeAllActions,
   approveSingleAction,
+  getErrorMessage,
   Incident,
   IncidentTimeline
 } from "../lib/api";
+import { useLocale } from "../lib/locale";
 import {
   AlertTriangle,
   Clock,
@@ -46,6 +50,7 @@ import {
 } from "lucide-react";
 
 export default function CommandCenterPage() {
+  const { t } = useLocale();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [activeIncident, setActiveIncident] = useState<Incident | null>(null);
   const [timeline, setTimeline] = useState<IncidentTimeline | null>(null);
@@ -122,8 +127,8 @@ export default function CommandCenterPage() {
       await approveSingleAction(activeIncident.id, actionId);
       setApprovedActions((prev) => ({ ...prev, [actionId]: true }));
       alert("Tactical response draft approved by Human Operator. Logged to audit trail.");
-    } catch (e: any) {
-      alert(`Approval error: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Approval error: ${getErrorMessage(e)}`);
     }
   };
 
@@ -137,15 +142,33 @@ export default function CommandCenterPage() {
         updatedMap[act.id] = true;
       }
       setApprovedActions(updatedMap);
-      alert(`One-Click Execution Complete: ${res.total_actions_approved} Response Actions Approved & Manifest Logged.`);
-    } catch (e: any) {
-      alert(`Execution error: ${e.message}`);
+      alert(`${res.total_actions_approved} drafts approved and logged. No external alerts or dispatches were sent.`);
+    } catch (e: unknown) {
+      alert(`Execution error: ${getErrorMessage(e)}`);
     } finally {
       setIsExecutingAll(false);
     }
   };
 
   if (!activeIncident) {
+    if (!isLoading) {
+      return (
+        <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-6 text-center text-slate-900 dark:text-white">
+          <h1 className="text-xl font-bold">{t("Command center data is unavailable.")}</h1>
+          <p role="alert" className="max-w-lg text-sm text-slate-600 dark:text-slate-300">
+            {t("Unable to load the incident and the demo fallback. Check the API connection before continuing.")}
+          </p>
+          <button
+            type="button"
+            onClick={loadData}
+            className="min-h-11 rounded-lg bg-primary px-5 py-2 font-bold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            {t("Retry")}
+          </button>
+        </main>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center text-white p-6">
         <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center font-black text-2xl mb-4 animate-bounce">
@@ -177,21 +200,30 @@ export default function CommandCenterPage() {
         onToggleOverride={() => setManualOverride(!manualOverride)}
       />
 
+      {activeIncident.status === "degraded" && (
+        <div role="alert" className="mx-auto mt-4 w-[calc(100%-2rem)] max-w-7xl rounded-xl border border-amber-500 bg-amber-50 p-4 text-sm font-semibold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+          {t("AI analysis is unavailable. This incident is unassessed; do not treat it as safe. No action plan was generated.")}
+        </div>
+      )}
+
+      <EmergencyHelp />
+
       {/* Main Command Center Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
         {/* Top Control Bar: Incident Switcher, Report Ingest, & One-Click Execute */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-              Active Crisis Incident:
-            </span>
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4 min-w-0">
+          <div className="flex min-w-0 flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
+            <label htmlFor="active-incident" className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+              {t("Active Crisis Incident:")}
+            </label>
             <select
+              id="active-incident"
               value={activeIncident.id}
               onChange={(e) => {
                 const found = incidents.find((i) => i.id === e.target.value);
                 if (found) handleSelectIncident(found);
               }}
-              className="text-xs font-bold bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark rounded-lg px-3 py-1.5 text-primary dark:text-slate-100 outline-none"
+              className="w-full min-w-0 sm:max-w-full text-xs font-bold bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark rounded-lg px-3 py-2 text-primary dark:text-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-alert"
             >
               {incidents.map((inc) => (
                 <option key={inc.id} value={inc.id}>
@@ -201,40 +233,40 @@ export default function CommandCenterPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:w-auto xl:flex-nowrap">
             {/* Landing Story Link */}
             <Link
               href="/landing"
-              className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="min-w-0 justify-center px-2 sm:px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px] sm:text-xs flex items-center gap-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5 text-alert" />
-              Storytelling View
+              {t("Storytelling View")}
             </Link>
 
             {/* Pocket PWA Toggle */}
             <button
               onClick={() => setShowPwaMobile(!showPwaMobile)}
-              className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="min-w-0 justify-center px-2 sm:px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px] sm:text-xs flex items-center gap-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
-              Pocket PWA
+              {t("Pocket PWA")}
             </button>
 
             {/* One-Click Execute Response Button */}
             <button
               onClick={handleExecuteAll}
               disabled={isExecutingAll}
-              className="px-4 py-2 rounded-xl bg-critical text-white font-black text-xs uppercase tracking-wide flex items-center gap-2 hover:bg-red-700 shadow-spatial-sm transition-all"
+              className="min-w-0 justify-center px-2 sm:px-4 py-2 rounded-xl bg-critical text-white font-black text-[10px] sm:text-xs uppercase tracking-wide flex items-center gap-2 hover:bg-red-700 shadow-spatial-sm transition-all"
             >
               <Zap className="w-4 h-4 text-yellow-300" />
-              {isExecutingAll ? "Executing..." : "Execute Approved Response"}
+              {isExecutingAll ? t("Executing...") : t("Execute Approved Response")}
             </button>
 
             <button
               onClick={() => setShowSubmission(!showSubmission)}
-              className="px-4 py-2 rounded-xl bg-primary text-white font-bold text-xs flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-spatial-sm"
+              className="min-w-0 justify-center px-2 sm:px-4 py-2 rounded-xl bg-primary text-white font-bold text-[10px] sm:text-xs flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-spatial-sm"
             >
               <UploadCloud className="w-4 h-4 text-alert" />
-              {showSubmission ? "Hide Ingestion" : "Submit Crisis Report"}
+              {showSubmission ? t("Hide Ingestion") : t("Submit Crisis Report")}
             </button>
           </div>
         </div>
@@ -287,9 +319,12 @@ export default function CommandCenterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Flood Photo Preview */}
               <div className="relative rounded-xl overflow-hidden border border-border-light dark:border-border-dark bg-slate-900 group">
-                <img
+                <Image
                   src="/mutha_river_flood.jpg"
                   alt="Mutha River flood Bund Garden Pune"
+                  width={1024}
+                  height={256}
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="w-full h-44 object-cover group-hover:scale-105 transition-transform"
                 />
                 <div className="absolute bottom-2 left-2 right-2 bg-black/80 backdrop-blur-md rounded p-1.5 text-[10px] text-white flex items-center justify-between">
@@ -307,15 +342,15 @@ export default function CommandCenterPage() {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
                       <Volume2 className="w-3.5 h-3.5 text-alert" /> Marathi Audio Distress Note
                     </span>
-                    <span className="text-[9px] font-mono text-success font-bold">TRANSCRIBED</span>
+                    <span className="text-[9px] font-mono text-success font-bold">{t("TRANSCRIBED")}</span>
                   </div>
 
                   <div className="p-2.5 rounded bg-white dark:bg-[#111B2E] border border-border-light dark:border-border-dark">
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                      "माझी आजी अडकली आहे आणि ती बाहेर पडू शकत नाही."
+                      &quot;माझी आजी अडकली आहे आणि ती बाहेर पडू शकत नाही.&quot;
                     </p>
                     <p className="text-[11px] text-slate-500 mt-1 italic">
-                      "My grandmother is trapped and cannot get out."
+                      &quot;My grandmother is trapped and cannot get out.&quot;
                     </p>
                   </div>
 
@@ -325,8 +360,8 @@ export default function CommandCenterPage() {
                 </div>
 
                 <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-500 flex items-center justify-between">
-                  <span>Stakeholder: Trapped Elderly Citizen</span>
-                  <span className="font-bold text-critical uppercase">Critical Triage</span>
+                  <span>{t("Stakeholder: Trapped Elderly Citizen")}</span>
+                  <span className="font-bold text-critical uppercase">{t("Critical Triage")}</span>
                 </div>
               </div>
             </div>
@@ -334,13 +369,13 @@ export default function CommandCenterPage() {
             {/* Operational Intent */}
             <div className="p-3.5 rounded-xl bg-primary/5 dark:bg-slate-800/40 border border-primary/20 dark:border-slate-700 text-xs">
               <span className="font-bold text-primary dark:text-slate-200 block mb-1">
-                Operational Intent: {activeIncident.intent_summary?.primary_intent || "Emergency Life Safety & Rescue"}
+                {t("Operational Intent:")} {activeIncident.intent_summary?.primary_intent || t("Emergency Life Safety & Rescue")}
               </span>
               <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-                <strong>Required Action:</strong> {activeIncident.intent_summary?.required_action}
+                <strong>{t("Required Action:")}</strong> {activeIncident.intent_summary?.required_action}
               </p>
               <p className="text-slate-600 dark:text-slate-400 text-[11px] mt-1">
-                <strong>Allocated Resources Needed:</strong>{" "}
+                <strong>{t("Allocated Resources Needed:")}</strong>{" "}
                 {activeIncident.intent_summary?.resources_needed?.join(", ") || "NDRF Inflatable Rescue Boat, ALS Ambulance, PMC Shelter Registration"}
               </p>
             </div>
@@ -353,7 +388,7 @@ export default function CommandCenterPage() {
                 <div className="flex items-center gap-2">
                   <CloudRain className="w-5 h-5 text-blue-500" />
                   <h3 className="text-xs font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-                    Weather & River Gauge
+                    {t("Weather & River Gauge")}
                   </h3>
                 </div>
                 <span className="text-[10px] font-mono text-slate-400">IMD 43063</span>
@@ -361,17 +396,17 @@ export default function CommandCenterPage() {
 
               <div className="p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 text-xs mb-3">
                 <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase block">
-                  Official Warning: IMD Station 43063 (Pune)
+                  {t("Official Warning: IMD Station 43063 (Pune)")}
                 </span>
                 <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                  Yellow/Orange Watch for Catchment Inflow & Local Heavy Showers
+                  {t("Yellow/Orange Watch for Catchment Inflow & Local Heavy Showers")}
                 </p>
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark text-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-500 uppercase">
-                    Bund Garden River Gauge
+                    {t("Bund Garden River Gauge")}
                   </span>
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/40">
                     DEMO DATA
@@ -380,7 +415,7 @@ export default function CommandCenterPage() {
 
                 <div className="flex items-baseline justify-between">
                   <span className="text-xl font-black text-critical">7.82 m</span>
-                  <span className="text-xs text-slate-500 font-medium">Danger Mark: 6.50 m</span>
+                  <span className="text-xs text-slate-500 font-medium">{t("Danger Mark: 6.50 m")}</span>
                 </div>
 
                 <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
@@ -388,8 +423,8 @@ export default function CommandCenterPage() {
                 </div>
 
                 <div className="flex justify-between text-[10px] text-slate-500 pt-1">
-                  <span>Dam Release: 35,400 cusecs</span>
-                  <span className="text-critical font-bold">+1.32m Overflow</span>
+                  <span>{t("Dam Release: 35,400 cusecs")}</span>
+                  <span className="text-critical font-bold">{t("+1.32m Overflow")}</span>
                 </div>
               </div>
             </div>
@@ -399,7 +434,7 @@ export default function CommandCenterPage() {
               className="w-full py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 font-bold text-xs text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4 text-alert" />
-              View Explainability Audit ("Why?")
+              {t('View Explainability Audit ("Why?")')}
             </button>
           </div>
 
@@ -458,10 +493,10 @@ export default function CommandCenterPage() {
                 <FileText className="w-5 h-5 text-primary dark:text-white" />
                 <div>
                   <h3 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-                    Draft Response Actions (Human-in-the-Loop Approval Required)
+                    {t("Draft Response Actions (Human-in-the-Loop Approval Required)")}
                   </h3>
                   <span className="text-[10px] text-slate-500">
-                    Rule 4: Nothing is transmitted externally without explicit operator sign-off.
+                    {t("Rule 4: Nothing is transmitted externally without explicit operator sign-off.")}
                   </span>
                 </div>
               </div>
@@ -473,7 +508,7 @@ export default function CommandCenterPage() {
                   className="px-3 py-1.5 rounded-lg bg-critical text-white font-black text-xs uppercase flex items-center gap-1.5 hover:bg-red-700 shadow-sm transition-all"
                 >
                   <Zap className="w-3.5 h-3.5 text-yellow-300" />
-                  Sign & Execute All Drafts
+                  {t("Sign & Execute All Drafts")}
                 </button>
               </div>
             </div>
@@ -493,7 +528,7 @@ export default function CommandCenterPage() {
                           {act.priority.toUpperCase()} PRIORITY
                         </span>
                         <span className="text-[10px] font-mono text-slate-400 capitalize">
-                          Audience: {act.target_audience}
+                          {t("Audience:")} {act.target_audience}
                         </span>
                       </div>
 
@@ -503,7 +538,7 @@ export default function CommandCenterPage() {
 
                       <div className="mt-2 space-y-2 text-xs">
                         <p className="text-slate-600 dark:text-slate-400">
-                          <strong className="text-slate-700 dark:text-slate-300">English:</strong> {act.content_en}
+                          <strong className="text-slate-700 dark:text-slate-300">{t("English:")}</strong> {act.content_en}
                         </p>
                         <p className="text-slate-600 dark:text-slate-400 font-medium">
                           <strong className="text-slate-700 dark:text-slate-300">मराठी:</strong> {act.content_mr}
@@ -513,7 +548,7 @@ export default function CommandCenterPage() {
 
                     <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-[10px] font-mono text-slate-400">
-                        Status: {isApproved ? "APPROVED (LOGGED)" : "PENDING HUMAN APPROVAL"}
+                        {t("Status:")} {isApproved ? t("APPROVED (LOGGED)") : t("PENDING HUMAN APPROVAL")}
                       </span>
 
                       <button
@@ -526,7 +561,7 @@ export default function CommandCenterPage() {
                         }`}
                       >
                         <CheckCircle className="w-3.5 h-3.5" />
-                        {isApproved ? "Approved & Logged" : "Sign & Approve Draft"}
+                        {isApproved ? t("Approved & Logged") : t("Sign & Approve Draft")}
                       </button>
                     </div>
                   </div>

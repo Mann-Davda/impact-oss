@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Clock, Cpu, FileText, CheckCircle2, ChevronRight, Activity } from "lucide-react";
 import { Incident, IncidentTimeline, TimelineEvent } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface AITimelineProps {
   incident: Incident;
@@ -10,6 +11,7 @@ interface AITimelineProps {
 }
 
 export function AITimeline({ incident, timeline }: AITimelineProps) {
+  const { t } = useLocale();
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
 
   const events = timeline?.events || [];
@@ -21,13 +23,13 @@ export function AITimeline({ incident, timeline }: AITimelineProps) {
         <div className="flex items-center gap-2">
           <Clock className="w-5 h-5 text-secondary dark:text-slate-300" />
           <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-            AI Execution Timeline & Live Agent Activity
+            {t("AI Execution Timeline & Live Agent Activity")}
           </h2>
         </div>
 
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
           <Activity className="w-3.5 h-3.5 text-success" />
-          <span>{events.length} Events Logged</span>
+          <span>{events.length} {t("Events Logged")}</span>
         </div>
       </div>
 
@@ -36,6 +38,8 @@ export function AITimeline({ incident, timeline }: AITimelineProps) {
         {events.map((event, idx) => {
           const isAgent = event.event_type === "agent_execution";
           const isAction = event.event_type === "action_drafted";
+          const durationMs = event.details.duration_ms;
+          const rationale = event.details.rationale;
 
           return (
             <div
@@ -75,23 +79,23 @@ export function AITimeline({ incident, timeline }: AITimelineProps) {
 
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-semibold text-slate-500">
-                    Actor: {event.actor}
+                    {t("Actor:")} {event.actor}
                   </span>
                   {event.confidence !== undefined && (
                     <span className="font-mono text-[10px] font-bold text-success">
-                      Conf: {(event.confidence * 100).toFixed(0)}%
+                      {t("Conf:")} {(event.confidence * 100).toFixed(0)}%
                     </span>
                   )}
-                  {event.details?.duration_ms !== undefined && (
+                  {typeof durationMs === "number" && (
                     <span className="font-mono text-[10px] text-slate-400">
-                      {event.details.duration_ms}ms
+                      {durationMs}ms
                     </span>
                   )}
                 </div>
 
-                {event.details?.rationale && (
+                {typeof rationale === "string" && (
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">
-                    {event.details.rationale}
+                    {rationale}
                   </p>
                 )}
               </div>
@@ -107,13 +111,13 @@ export function AITimeline({ incident, timeline }: AITimelineProps) {
         <div className="mt-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-border-light dark:border-border-dark text-xs">
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-primary dark:text-white">
-              Event Detail: {selectedEvent.title}
+              {t("Event Detail:")} {selectedEvent.title}
             </span>
             <button
               onClick={() => setSelectedEvent(null)}
               className="text-[10px] text-slate-400 hover:text-slate-600"
             >
-              Close
+              {t("Close")}
             </button>
           </div>
           <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono break-all max-h-32 overflow-y-auto">

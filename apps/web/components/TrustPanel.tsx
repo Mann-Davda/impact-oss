@@ -3,12 +3,14 @@
 import React, { useState } from "react";
 import { ShieldCheck, AlertTriangle, CheckCircle2, HelpCircle, XCircle, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { Incident, EvidenceItem } from "../lib/api";
+import { useLocale } from "../lib/locale";
 
 interface TrustPanelProps {
   incident: Incident;
 }
 
 export function TrustPanel({ incident }: TrustPanelProps) {
+  const { t } = useLocale();
   const [expandedEvidence, setExpandedEvidence] = useState<Record<string, boolean>>({});
 
   const toggleEvidence = (id: string) => {
@@ -34,26 +36,33 @@ export function TrustPanel({ incident }: TrustPanelProps) {
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-black uppercase bg-critical text-white shadow-sm">
             <AlertTriangle className="w-3.5 h-3.5" />
-            CRITICAL THREAT
+            {t("CRITICAL THREAT")}
           </span>
         );
       case "high":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold uppercase bg-alert text-slate-900 shadow-sm">
             <AlertTriangle className="w-3.5 h-3.5" />
-            HIGH THREAT
+            {t("HIGH THREAT")}
           </span>
         );
       case "moderate":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300">
-            MODERATE
+            {t("MODERATE")}
+          </span>
+        );
+      case "unassessed":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold uppercase bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100">
+            <HelpCircle className="w-3.5 h-3.5" />
+            {t("ASSESSMENT UNAVAILABLE")}
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold uppercase bg-success text-white">
-            LOW RISK
+            {t("LOW RISK")}
           </span>
         );
     }
@@ -66,7 +75,7 @@ export function TrustPanel({ incident }: TrustPanelProps) {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-success" />
           <h2 className="text-sm font-extrabold tracking-wide uppercase text-primary dark:text-slate-100">
-            Trust & Risk Verification Panel
+            {t("Trust & Risk Verification Panel")}
           </h2>
         </div>
         <div>{getRiskBadge(incident.risk_level)}</div>
@@ -77,34 +86,36 @@ export function TrustPanel({ incident }: TrustPanelProps) {
         {/* Risk Score */}
         <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Risk Score
+            {t("Risk Score")}
           </span>
           <div className="text-2xl font-black text-critical mt-0.5">
-            {(incident.risk_score * 100).toFixed(0)}%
+            {incident.status === "degraded" ? "—" : `${(incident.risk_score * 100).toFixed(0)}%`}
           </div>
-          <span className="text-[10px] font-medium text-slate-400">Severity Metric</span>
+          <span className="text-[10px] font-medium text-slate-400">{t("Severity Metric")}</span>
         </div>
 
         {/* Consensus Confidence */}
         <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Consensus Confidence
+            {t("Consensus Confidence")}
           </span>
           <div className="text-2xl font-black text-primary dark:text-slate-100 mt-0.5">
-            {(incident.consensus_score * 100).toFixed(0)}%
+            {incident.status === "degraded" ? "—" : `${(incident.consensus_score * 100).toFixed(0)}%`}
           </div>
-          <span className="text-[10px] font-medium text-slate-400">Multi-Agent Agreement</span>
+          <span className="text-[10px] font-medium text-slate-400">{t("Multi-Agent Agreement")}</span>
         </div>
 
         {/* Mandatory Uncertainty Range */}
         <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-border-light dark:border-border-dark">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Confidence Bounds
+            {t("Confidence Bounds")}
           </span>
           <div className="text-lg font-extrabold text-slate-800 dark:text-slate-200 mt-1">
-            {(incident.confidence_min * 100).toFixed(0)}% – {(incident.confidence_max * 100).toFixed(0)}%
+            {incident.status === "degraded"
+              ? "—"
+              : `${(incident.confidence_min * 100).toFixed(0)}% – ${(incident.confidence_max * 100).toFixed(0)}%`}
           </div>
-          <span className="text-[10px] font-medium text-slate-400">Uncertainty Range</span>
+          <span className="text-[10px] font-medium text-slate-400">{t("Uncertainty Range")}</span>
         </div>
       </div>
 
@@ -112,14 +123,21 @@ export function TrustPanel({ incident }: TrustPanelProps) {
       <div>
         <div className="flex items-center justify-between mb-2.5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-            Verified Evidence List ({incident.evidence.length} Claims Verified)
+            {t("Evidence")} ({incident.evidence.length} {t("claims recorded")})
           </h3>
           <span className="text-[10px] font-semibold text-slate-400 uppercase">
-            Auditable Chain of Custody
+            {t("Auditable Chain of Custody")}
           </span>
         </div>
 
         <div className="flex flex-col gap-2">
+          {incident.evidence.length === 0 && (
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+              {incident.status === "degraded"
+                ? t("No claims were verified because analysis is unavailable.")
+                : t("No evidence has been recorded yet.")}
+            </p>
+          )}
           {incident.evidence.map((evi) => {
             const isExpanded = expandedEvidence[evi.id] ?? false;
             const isMock = evi.source_type === "mock" || evi.source.includes("DEMO DATA");
@@ -141,7 +159,7 @@ export function TrustPanel({ incident }: TrustPanelProps) {
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="font-mono text-[10px] text-slate-500">
-                          Source: {evi.source}
+                          {t("Source:")} {evi.source}
                         </span>
                         {isMock && (
                           <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40">
@@ -167,11 +185,11 @@ export function TrustPanel({ incident }: TrustPanelProps) {
                 {isExpanded && (
                   <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400">
                     <p>
-                      <strong className="text-slate-700 dark:text-slate-300">Reasoning:</strong>{" "}
+                      <strong className="text-slate-700 dark:text-slate-300">{t("Reasoning:")}</strong>{" "}
                       {evi.reasoning}
                     </p>
                     <p className="font-mono text-[10px] text-slate-400 mt-1">
-                      Verified Timestamp: {new Date(evi.timestamp).toLocaleString()}
+                      {t("Verified Timestamp:")} {new Date(evi.timestamp).toLocaleString()}
                     </p>
                   </div>
                 )}

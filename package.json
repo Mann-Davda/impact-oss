@@ -1,0 +1,26 @@
+{
+  "name": "impactos-root",
+  "version": "1.0.0",
+  "description": "ImpactOS: Autonomous Crisis Decision Support System (From Chaos To Action)",
+  "scripts": {
+    "dev": "npm run dev --prefix apps/web",
+    "start": "npm run start --prefix apps/web",
+    "build": "npm run build --prefix apps/web",
+    "lint": "npm run lint --prefix apps/web",
+    "web": "npm run dev --prefix apps/web",
+    "api": "cd apps/api && ./run.sh",
+    "all": "./run_all.sh",
+    "daemon": "./scripts/start_daemon.sh",
+    "status": "./scripts/status.sh",
+    "stop": "./scripts/stop_daemon.sh"
+  },
+  "keywords": [
+    "impactos",
+    "emergency-response",
+    "crisis-triage",
+    "multi-agent",
+    "gemini"
+  ],
+  "author": "ImpactOS Team",
+  "license": "MIT"
+}

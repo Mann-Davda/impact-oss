@@ -1,11 +1,14 @@
-import time
 import logging
-from typing import Dict, Any, Optional
+import time
 from datetime import datetime
+from typing import Any, Dict
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.models import AgentRun
 
 logger = logging.getLogger(__name__)
+
 
 class BaseAgent:
     def __init__(self, name: str, phase: str = "core_pipeline"):
@@ -13,10 +16,7 @@ class BaseAgent:
         self.phase = phase
 
     async def execute_tracked(
-        self,
-        incident_id: str,
-        input_payload: Dict[str, Any],
-        db: AsyncSession
+        self, incident_id: str, input_payload: Dict[str, Any], db: AsyncSession
     ) -> Dict[str, Any]:
         """
         Executes agent logic, times the execution, records an AgentRun in the database,
@@ -24,7 +24,7 @@ class BaseAgent:
         """
         start_time = time.time()
         status = "success"
-        
+
         try:
             result = await self.process(incident_id, input_payload, db)
             if result.get("status") == "degraded":
@@ -36,16 +36,16 @@ class BaseAgent:
                 "status": "failed",
                 "error": str(e),
                 "confidence": 0.0,
-                "rationale": f"Execution failure in agent {self.name}: {str(e)}"
+                "rationale": f"Execution failure in agent {self.name}: {e!s}",
             }
-            
+
         duration_ms = int((time.time() - start_time) * 1000)
-        
+
         # Extract confidence and rationale
         confidence = float(result.get("confidence_score", result.get("confidence", 0.0)))
         risk_level = result.get("risk_level", None)
         rationale = result.get("rationale", result.get("reasoning", "No rationale provided"))
-        
+
         # Persist AgentRun
         agent_run = AgentRun(
             incident_id=incident_id,
@@ -58,7 +58,7 @@ class BaseAgent:
             input_payload=input_payload,
             output_payload=result,
             duration_ms=duration_ms,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
         db.add(agent_run)
         await db.commit()
@@ -69,9 +69,6 @@ class BaseAgent:
         return result
 
     async def process(
-        self,
-        incident_id: str,
-        input_payload: Dict[str, Any],
-        db: AsyncSession
+        self, incident_id: str, input_payload: Dict[str, Any], db: AsyncSession
     ) -> Dict[str, Any]:
         raise NotImplementedError

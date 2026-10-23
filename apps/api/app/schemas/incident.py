@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
 
 class EvidenceItemSchema(BaseModel):
     id: Optional[str] = None
@@ -11,6 +13,7 @@ class EvidenceItemSchema(BaseModel):
     source_type: str
     reasoning: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
 
 class AgentRunSchema(BaseModel):
     id: Optional[str] = None
@@ -25,16 +28,17 @@ class AgentRunSchema(BaseModel):
     duration_ms: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 class InputItemSchema(BaseModel):
     id: Optional[str] = None
     input_type: str
     source: str = "citizen_upload"
     filename: Optional[str] = None
-    file_path: Optional[str] = None
     mime_type: Optional[str] = None
     content_text: Optional[str] = None
     metadata_json: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 class ActionItemSchema(BaseModel):
     id: Optional[str] = None
@@ -48,6 +52,7 @@ class ActionItemSchema(BaseModel):
     requires_human_approval: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 class ConsensusMetricsSchema(BaseModel):
     consensus_score: float = Field(ge=0.0, le=1.0)
     confidence_min: float
@@ -57,6 +62,7 @@ class ConsensusMetricsSchema(BaseModel):
     disagreement_factors: List[str]
     rationale: str
 
+
 class TimelineEventSchema(BaseModel):
     id: str
     event_type: str  # input_ingested, agent_execution, consensus_reached, action_drafted
@@ -65,6 +71,7 @@ class TimelineEventSchema(BaseModel):
     actor: str
     confidence: Optional[float] = None
     details: Dict[str, Any] = Field(default_factory=dict)
+
 
 class IncidentResponse(BaseModel):
     id: str
@@ -90,6 +97,7 @@ class IncidentResponse(BaseModel):
     actions: List[ActionItemSchema] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
+
 
 class IncidentTimelineResponse(BaseModel):
     incident_id: str
