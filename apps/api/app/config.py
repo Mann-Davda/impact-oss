@@ -6,6 +6,20 @@ from pathlib import Path
 # Locate base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Candidate env files
+candidate_env_files = [
+    BASE_DIR / ".env",
+    BASE_DIR.parent.parent / ".env",  # impactos root
+]
+valid_env_files = []
+for ef in candidate_env_files:
+    try:
+        if ef.is_file():
+            with open(ef, "r") as _f:
+                valid_env_files.append(str(ef))
+    except Exception:
+        pass
+
 class Settings(BaseSettings):
     APP_ENV: str = "development"
     API_PORT: int = 8000
@@ -26,7 +40,7 @@ class Settings(BaseSettings):
     DEMO_ASSETS_DIR: str = str(BASE_DIR / "demo_assets")
 
     class Config:
-        env_file = [str(BASE_DIR / ".env"), str(BASE_DIR.parent.parent / ".env")]
+        env_file = tuple(valid_env_files)
         extra = "allow"
 
 settings = Settings()

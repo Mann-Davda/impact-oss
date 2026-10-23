@@ -40,7 +40,7 @@ app.add_middleware(
 # Include Routers
 app.include_router(incidents.router)
 
-@app.get("/", tags=["system"])
+@app.api_route("/", methods=["GET", "HEAD"], tags=["system"])
 async def root():
     return {
         "system": "ImpactOS",
@@ -52,7 +52,7 @@ async def root():
         "database": settings.DATABASE_URL.split("///")[0] if "///" in settings.DATABASE_URL else "postgresql"
     }
 
-@app.get("/health", tags=["system"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["system"])
 async def health_check():
     return {
         "status": "healthy",
