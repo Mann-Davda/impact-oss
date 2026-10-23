@@ -143,13 +143,15 @@ plus API lint and tests, for pushes and pull requests.
 ### 2. Deploy the web app to Vercel
 
 1. Import the GitHub repository in Vercel.
-2. Set **Root Directory** to `apps/web` and leave the framework as Next.js.
-   `apps/web/vercel.json` identifies the framework.
+2. Leave **Root Directory** at the repository root. The root `package.json`
+   declares `apps/web` as an npm workspace, so Vercel's root install includes
+   Next.js and the root build command delegates to that workspace. Alternatively,
+   set **Root Directory** to `apps/web` to deploy the Next.js app directly.
 3. Add the environment variable `NEXT_PUBLIC_API_URL` with the public base URL
    of the deployed API (for example, `https://your-api.example.com`). Set it for
    Preview and Production environments as needed.
-4. Deploy. Vercel builds from `apps/web/package-lock.json`; no API key belongs
-   in the Vercel web project.
+4. Deploy. At the repository root, Vercel uses the root `package-lock.json`.
+   No API key belongs in the Vercel web project.
 
 The web app's `NEXT_PUBLIC_API_URL` is embedded into browser JavaScript, so it
 must contain only the public API URL. Do not put `GEMINI_API_KEY` or other
